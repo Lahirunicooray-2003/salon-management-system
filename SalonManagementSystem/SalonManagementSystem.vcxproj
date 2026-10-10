@@ -204,21 +204,26 @@
     <ClInclude Include="CCustomerDlg.h" />
     <ClInclude Include="CDashboardDlg.h" />
     <ClInclude Include="CServiceDlg.h" />
+    <ClInclude Include="CStylistDlg.h" />
+    <ClInclude Include="Customer.h" />
     <ClInclude Include="DBConfig.example.h" />
     <ClInclude Include="DBConfig.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="DBConnection.h" />
     <ClInclude Include="Header.h" />
     <ClInclude Include="pch.h" />
+    <ClInclude Include="Person.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="SalonManagementSystem.h" />
     <ClInclude Include="SalonManagementSystemDlg.h" />
+    <ClInclude Include="Stylist.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CCustomerDlg.cpp" />
     <ClCompile Include="CDashboardDlg.cpp" />
     <ClCompile Include="CServiceDlg.cpp" />
+    <ClCompile Include="CStylistDlg.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

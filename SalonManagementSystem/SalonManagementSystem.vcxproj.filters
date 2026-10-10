@@ -54,6 +54,18 @@
     <ClInclude Include="DBConfig.example.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Person.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Customer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Stylist.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CStylistDlg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="SalonManagementSystem.cpp">
@@ -72,6 +84,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="CServiceDlg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CStylistDlg.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -7,6 +7,7 @@
 #include "CDashboardDlg.h"
 #include "CCustomerDlg.h"
 #include "CServiceDlg.h"
+#include "CStylistDlg.h"
 
 
 // CDashboardDlg dialog
@@ -92,8 +93,8 @@ void CDashboardDlg::OnBnClickedBtnServices()
 
 void CDashboardDlg::OnBnClickedBtnStylists()
 {
-    AfxMessageBox(L"Coming soon...");
-    // TODO: Add your control notification handler code here
+    CStylistDlg dlg;
+    dlg.DoModal();
 }
 
 void CDashboardDlg::OnBnClickedBtnLogout()

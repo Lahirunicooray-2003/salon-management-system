@@ -8,9 +8,9 @@
 #define IDD_SALONMANAGEMENTSYSTEM_DIALOG 102
 #define IDR_MAINFRAME                   128
 #define IDR_ACCELERATOR1                130
-#define IDD_DASHBOARD_DIALOG            133
 #define IDD_DASHBOARD1_DIALOG           135
 #define IDD_SERVICE_DIALOG              137
+#define IDD_STYLIST_DIALOG              139
 #define IDC_EDIT_USERNAME               1000
 #define IDC_EDIT_PASSWORD               1001
 #define IDC_BTN_LOGIN                   1003
@@ -22,8 +22,6 @@
 #define IDC_BTN_CDELETE                 1009
 #define IDC_STATIC_CTITLE               1010
 #define IDC_LIST_CUSTOMERS              1010
-#define IDC_BUTTON2                     1012
-#define IDC_BUTTON3                     1013
 #define IDC_BTN_CUSTOMERS               1014
 #define IDC_BTN_STYLISTS                1015
 #define IDC_BTN_LOGOUT                  1016
@@ -37,15 +35,24 @@
 #define IDC_BTN_SUPDATE                 1027
 #define IDC_BTN_SDELETE                 1028
 #define IDC_LIST_SERVICES               1029
+#define IDC_EDIT_TNAME                  1030
+#define IDC_EDIT_TPHONE                 1031
+#define IDC_EDIT_TEMAIL                 1032
+#define IDC_EDIT_TSPEC                  1033
+#define IDC_BTN_TADD                    1034
+#define IDC_BTN_TDETAILS                1035
+#define IDC_LIST_STYLISTS               1036
+#define IDC_BTN_TUPDATE                 1037
+#define IDC_BTN_TDELETE                 1038
 #define IDD_CUSTOMER_DIALOG             32771
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        139
+#define _APS_NEXT_RESOURCE_VALUE        141
 #define _APS_NEXT_COMMAND_VALUE         32773
-#define _APS_NEXT_CONTROL_VALUE         1030
+#define _APS_NEXT_CONTROL_VALUE         1039
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

@@ -6,6 +6,7 @@
 #include "afxdialogex.h"
 #include "CCustomerDlg.h"
 #include "DBConnection.h"
+#include "Customer.h"
 #include <string>
 
 // CString (wide) -> std::string (UTF-8)
@@ -82,22 +83,28 @@ void CCustomerDlg::LoadCustomers()
 void CCustomerDlg::OnBnClickedBtnCadd()
 {
 	UpdateData(TRUE);
-	if (m_name.IsEmpty() || m_phone.GetLength() != 10)
+
+	try
 	{
-		AfxMessageBox(L"Please enter a name. The phone number must have 10 digits.");
+		// OBJECT: created here; validation happens inside the setters
+		Customer c(ToUtf8(m_name), ToUtf8(m_phone), ToUtf8(m_email));
+
+		DBConnection db;
+		if (!db.Open()) { AfxMessageBox(L"Unable to connect to the database."); return; }
+
+		std::string sql = "INSERT INTO Customer (Name, Phone, Email) VALUES ('"
+			+ db.Escape(c.getName()) + "','"
+			+ db.Escape(c.getPhone()) + "','"
+			+ db.Escape(c.getEmail()) + "')";
+
+		if (db.Execute(sql)) AfxMessageBox(L"Customer added successfully.");
+		else AfxMessageBox(L"Failed to add the customer.");
+	}
+	catch (const std::invalid_argument& e)
+	{
+		AfxMessageBox(CString(CA2W(e.what(), CP_UTF8)));
 		return;
 	}
-
-	DBConnection db;
-	if (!db.Open()) { AfxMessageBox(L"Unable to connect to the database."); return; }
-
-	std::string sql = "INSERT INTO Customer (Name, Phone, Email) VALUES ('"
-		+ db.Escape(ToUtf8(m_name)) + "','"
-		+ db.Escape(ToUtf8(m_phone)) + "','"
-		+ db.Escape(ToUtf8(m_email)) + "')";
-
-	if (db.Execute(sql)) AfxMessageBox(L"Customer added successfully.");
-	else AfxMessageBox(L"Failed to add the customer.");
 
 	m_name = m_phone = m_email = L"";
 	UpdateData(FALSE);
