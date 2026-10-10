@@ -1,0 +1,155 @@
+// CCustomerDlg.cpp : implementation file
+//
+
+#include "pch.h"
+#include "SalonManagementSystem.h"
+#include "afxdialogex.h"
+#include "CCustomerDlg.h"
+#include "DBConnection.h"
+#include <string>
+
+// CString (wide) -> std::string (UTF-8)
+static std::string ToUtf8(const CString& s)
+{
+	CStringA a(CW2A(s, CP_UTF8));
+	return std::string(a);
+}
+
+IMPLEMENT_DYNAMIC(CCustomerDlg, CDialogEx)
+
+CCustomerDlg::CCustomerDlg(CWnd* pParent /*=nullptr*/)
+	: CDialogEx(IDD_CUSTOMER_DIALOG, pParent)
+{
+}
+
+CCustomerDlg::~CCustomerDlg()
+{
+}
+
+void CCustomerDlg::DoDataExchange(CDataExchange* pDX)
+{
+	CDialogEx::DoDataExchange(pDX);
+	DDX_Text(pDX, IDC_EDIT_CNAME, m_name);
+	DDX_Text(pDX, IDC_EDIT_CPHONE, m_phone);
+	DDX_Text(pDX, IDC_EDIT_CEMAIL, m_email);
+	DDX_Control(pDX, IDC_LIST_CUSTOMERS, m_list);
+}
+
+BEGIN_MESSAGE_MAP(CCustomerDlg, CDialogEx)
+	ON_BN_CLICKED(IDC_BTN_CADD, &CCustomerDlg::OnBnClickedBtnCadd)
+	ON_BN_CLICKED(IDC_BTN_CUPDATE, &CCustomerDlg::OnBnClickedBtnCupdate)
+	ON_BN_CLICKED(IDC_BTN_CDELETE, &CCustomerDlg::OnBnClickedBtnCdelete)
+	ON_NOTIFY(NM_CLICK, IDC_LIST_CUSTOMERS, &CCustomerDlg::OnNMClickListCustomers)
+END_MESSAGE_MAP()
+
+BOOL CCustomerDlg::OnInitDialog()
+{
+	CDialogEx::OnInitDialog();
+
+	m_list.SetExtendedStyle(LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES);
+	m_list.InsertColumn(0, L"ID", LVCFMT_LEFT, 50);
+	m_list.InsertColumn(1, L"Name", LVCFMT_LEFT, 150);
+	m_list.InsertColumn(2, L"Phone", LVCFMT_LEFT, 120);
+	m_list.InsertColumn(3, L"Email", LVCFMT_LEFT, 180);
+
+	LoadCustomers();
+	return TRUE;
+}
+
+void CCustomerDlg::LoadCustomers()
+{
+	m_list.DeleteAllItems();
+
+	DBConnection db;
+	if (!db.Open()) { AfxMessageBox(L"Unable to connect to the database."); return; }
+
+	MYSQL_RES* res = db.Query("SELECT CustomerID, Name, Phone, Email FROM Customer");
+	if (!res) return;
+
+	MYSQL_ROW row;
+	int i = 0;
+	while ((row = mysql_fetch_row(res)))
+	{
+		m_list.InsertItem(i, CString(CA2W(row[0] ? row[0] : "", CP_UTF8)));
+		m_list.SetItemText(i, 1, CString(CA2W(row[1] ? row[1] : "", CP_UTF8)));
+		m_list.SetItemText(i, 2, CString(CA2W(row[2] ? row[2] : "", CP_UTF8)));
+		m_list.SetItemText(i, 3, CString(CA2W(row[3] ? row[3] : "", CP_UTF8)));
+		i++;
+	}
+	mysql_free_result(res);
+}
+
+void CCustomerDlg::OnBnClickedBtnCadd()
+{
+	UpdateData(TRUE);
+	if (m_name.IsEmpty() || m_phone.GetLength() != 10)
+	{
+		AfxMessageBox(L"Please enter a name. The phone number must have 10 digits.");
+		return;
+	}
+
+	DBConnection db;
+	if (!db.Open()) { AfxMessageBox(L"Unable to connect to the database."); return; }
+
+	std::string sql = "INSERT INTO Customer (Name, Phone, Email) VALUES ('"
+		+ db.Escape(ToUtf8(m_name)) + "','"
+		+ db.Escape(ToUtf8(m_phone)) + "','"
+		+ db.Escape(ToUtf8(m_email)) + "')";
+
+	if (db.Execute(sql)) AfxMessageBox(L"Customer added successfully.");
+	else AfxMessageBox(L"Failed to add the customer.");
+
+	m_name = m_phone = m_email = L"";
+	UpdateData(FALSE);
+	LoadCustomers();
+}
+
+void CCustomerDlg::OnBnClickedBtnCupdate()
+{
+	UpdateData(TRUE);
+	if (m_selectedId == 0) { AfxMessageBox(L"Please select a customer from the list."); return; }
+
+	DBConnection db;
+	if (!db.Open()) return;
+
+	std::string sql = "UPDATE Customer SET Name='" + db.Escape(ToUtf8(m_name))
+		+ "', Phone='" + db.Escape(ToUtf8(m_phone))
+		+ "', Email='" + db.Escape(ToUtf8(m_email))
+		+ "' WHERE CustomerID=" + std::to_string(m_selectedId);
+
+	if (db.Execute(sql)) AfxMessageBox(L"Customer updated successfully.");
+	else AfxMessageBox(L"Failed to update the customer.");
+	LoadCustomers();
+}
+
+void CCustomerDlg::OnBnClickedBtnCdelete()
+{
+	if (m_selectedId == 0) { AfxMessageBox(L"Please select a customer from the list."); return; }
+	if (AfxMessageBox(L"Are you sure you want to delete this customer?", MB_YESNO) != IDYES) return;
+
+	DBConnection db;
+	if (!db.Open()) return;
+
+	if (db.Execute("DELETE FROM Customer WHERE CustomerID=" + std::to_string(m_selectedId)))
+		AfxMessageBox(L"Customer deleted successfully.");
+	else AfxMessageBox(L"Failed to delete the customer.");
+
+	m_selectedId = 0;
+	m_name = m_phone = m_email = L"";
+	UpdateData(FALSE);
+	LoadCustomers();
+}
+
+void CCustomerDlg::OnNMClickListCustomers(NMHDR* pNMHDR, LRESULT* pResult)
+{
+	LPNMITEMACTIVATE p = reinterpret_cast<LPNMITEMACTIVATE>(pNMHDR);
+	if (p->iItem >= 0)
+	{
+		m_selectedId = _ttoi(m_list.GetItemText(p->iItem, 0));
+		m_name = m_list.GetItemText(p->iItem, 1);
+		m_phone = m_list.GetItemText(p->iItem, 2);
+		m_email = m_list.GetItemText(p->iItem, 3);
+		UpdateData(FALSE);
+	}
+	*pResult = 0;
+}
