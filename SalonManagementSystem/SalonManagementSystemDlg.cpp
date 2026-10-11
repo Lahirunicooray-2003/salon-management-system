@@ -79,6 +79,7 @@ BEGIN_MESSAGE_MAP(CSalonManagementSystemDlg, CDialogEx)
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
 	ON_BN_CLICKED(IDC_BTN_LOGIN, &CSalonManagementSystemDlg::OnBnClickedBtnLogin)
+	ON_WM_CTLCOLOR()
 END_MESSAGE_MAP()
 
 
@@ -114,6 +115,23 @@ BOOL CSalonManagementSystemDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// Set small icon
 
 	// TODO: Add extra initialization here
+
+	m_bgBrush.CreateSolidBrush(Theme::Bg);
+	m_titleFont.CreatePointFont(260, L"Segoe UI Semibold");
+
+	CWnd* pChild = GetWindow(GW_CHILD);
+	while (pChild)
+	{
+		CString txt;
+		pChild->GetWindowText(txt);
+		if (txt == L"SALON AURA")
+		{
+			pChild->SetFont(&m_titleFont);
+			m_titleHwnd = pChild->GetSafeHwnd();
+			break;
+		}
+		pChild = pChild->GetNextWindow();
+	}
 
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
@@ -209,3 +227,18 @@ void CSalonManagementSystemDlg::OnBnClickedBtnLogin()
 		AfxMessageBox(L"Incorrect username or password.");
 	}
 }	// TODO: Add your control notification handler code here}
+HBRUSH CSalonManagementSystemDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
+{
+	HBRUSH hbr = CDialogEx::OnCtlColor(pDC, pWnd, nCtlColor);
+
+	if (nCtlColor == CTLCOLOR_DLG || nCtlColor == CTLCOLOR_STATIC)
+	{
+		pDC->SetBkMode(TRANSPARENT);
+		if (pWnd->GetSafeHwnd() == m_titleHwnd)
+			pDC->SetTextColor(Theme::GoldDark);
+		else
+			pDC->SetTextColor(Theme::Text);
+		return (HBRUSH)m_bgBrush.GetSafeHandle();
+	}
+	return hbr;
+}

@@ -3,6 +3,7 @@
 //
 
 #pragma once
+#include "Theme.h"
 
 
 // CSalonManagementSystemDlg dialog
@@ -24,6 +25,10 @@ public:
 // Implementation
 protected:
 	HICON m_hIcon;
+	CBrush m_bgBrush;
+	CFont m_titleFont;
+	HWND m_titleHwnd = nullptr;
+	afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
 
 	// Generated message map functions
 	virtual BOOL OnInitDialog();

@@ -11,6 +11,7 @@
 #include "resource.h"		// main symbols
 
 
+
 // CSalonManagementSystemApp:
 // See SalonManagementSystem.cpp for the implementation of this class
 //
