@@ -1,5 +1,7 @@
 #pragma once
 #include "afxdialogex.h"
+#include "Theme.h"
+
 class CDashboardDlg : public CDialogEx
 {
 	DECLARE_DYNAMIC(CDashboardDlg)
@@ -28,4 +30,5 @@ public:
 	afx_msg void OnBnClickedBtnStylists();
 	afx_msg void OnBnClickedBtnLogout();
 	afx_msg void OnStnClickedStaticDtitle();
+	CMFCButton m_btnCustomers, m_btnServices, m_btnStylists, m_btnLogout;
 };

@@ -1,5 +1,6 @@
 #pragma once
 #include "afxdialogex.h"
+#include "Theme.h"
 
 // CCustomerDlg dialog
 
@@ -28,10 +29,17 @@ public:
 	CListCtrl m_list;
 	int m_selectedId = 0;
 
+	CBrush m_bgBrush;
+	CFont m_titleFont;
+	CStatic m_title;
+	CMFCButton m_btnAdd, m_btnUpdate, m_btnDelete;
+	afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
+
 	void LoadCustomers();
 
 	afx_msg void OnBnClickedBtnCadd();
 	afx_msg void OnBnClickedBtnCupdate();
 	afx_msg void OnBnClickedBtnCdelete();
 	afx_msg void OnNMClickListCustomers(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg void OnEnChangeEditCemail();
 };

@@ -66,6 +66,9 @@
     <ClInclude Include="CStylistDlg.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Theme.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="SalonManagementSystem.cpp">

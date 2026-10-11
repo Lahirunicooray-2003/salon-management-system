@@ -34,6 +34,11 @@ void CCustomerDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_EDIT_CPHONE, m_phone);
 	DDX_Text(pDX, IDC_EDIT_CEMAIL, m_email);
 	DDX_Control(pDX, IDC_LIST_CUSTOMERS, m_list);
+
+	DDX_Control(pDX, IDC_CTITLE, m_title);
+	DDX_Control(pDX, IDC_BTN_CADD, m_btnAdd);
+	DDX_Control(pDX, IDC_BTN_CUPDATE, m_btnUpdate);
+	DDX_Control(pDX, IDC_BTN_CDELETE, m_btnDelete);
 }
 
 BEGIN_MESSAGE_MAP(CCustomerDlg, CDialogEx)
@@ -41,6 +46,8 @@ BEGIN_MESSAGE_MAP(CCustomerDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BTN_CUPDATE, &CCustomerDlg::OnBnClickedBtnCupdate)
 	ON_BN_CLICKED(IDC_BTN_CDELETE, &CCustomerDlg::OnBnClickedBtnCdelete)
 	ON_NOTIFY(NM_CLICK, IDC_LIST_CUSTOMERS, &CCustomerDlg::OnNMClickListCustomers)
+	ON_WM_CTLCOLOR()
+	ON_EN_CHANGE(IDC_EDIT_CEMAIL, &CCustomerDlg::OnEnChangeEditCemail)
 END_MESSAGE_MAP()
 
 BOOL CCustomerDlg::OnInitDialog()
@@ -52,6 +59,18 @@ BOOL CCustomerDlg::OnInitDialog()
 	m_list.InsertColumn(1, L"Name", LVCFMT_LEFT, 150);
 	m_list.InsertColumn(2, L"Phone", LVCFMT_LEFT, 120);
 	m_list.InsertColumn(3, L"Email", LVCFMT_LEFT, 180);
+
+	m_bgBrush.CreateSolidBrush(Theme::Bg);
+	m_titleFont.CreatePointFont(180, L"Segoe UI Semibold");
+	m_title.SetFont(&m_titleFont);
+
+	StyleGoldButton(m_btnAdd);
+	StyleGoldButton(m_btnUpdate);
+	StyleGoldButton(m_btnDelete);
+
+	m_list.SetBkColor(Theme::ListBg);
+	m_list.SetTextBkColor(Theme::ListBg);
+	m_list.SetTextColor(Theme::Text);
 
 	LoadCustomers();
 	return TRUE;
@@ -159,4 +178,23 @@ void CCustomerDlg::OnNMClickListCustomers(NMHDR* pNMHDR, LRESULT* pResult)
 		UpdateData(FALSE);
 	}
 	*pResult = 0;
+}
+void CCustomerDlg::OnEnChangeEditCemail()
+{
+}
+
+HBRUSH CCustomerDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
+{
+	HBRUSH hbr = CDialogEx::OnCtlColor(pDC, pWnd, nCtlColor);
+
+	if (nCtlColor == CTLCOLOR_DLG || nCtlColor == CTLCOLOR_STATIC)
+	{
+		pDC->SetBkMode(TRANSPARENT);
+		if (pWnd->GetDlgCtrlID() == IDC_CTITLE)
+			pDC->SetTextColor(Theme::GoldDark);
+		else
+			pDC->SetTextColor(Theme::Text);
+		return (HBRUSH)m_bgBrush.GetSafeHandle();
+	}
+	return hbr;
 }

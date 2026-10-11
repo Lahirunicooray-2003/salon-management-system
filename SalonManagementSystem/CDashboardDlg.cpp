@@ -8,6 +8,7 @@
 #include "CCustomerDlg.h"
 #include "CServiceDlg.h"
 #include "CStylistDlg.h"
+#include "Theme.h"
 
 
 // CDashboardDlg dialog
@@ -28,6 +29,8 @@ void CDashboardDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
 	DDX_Control(pDX, IDC_STATIC_DTITLE, m_title);
+
+ 
 }
 
 
@@ -49,7 +52,7 @@ BOOL CDashboardDlg::OnInitDialog()
 
     m_titleFont.CreatePointFont(160, L"Segoe UI Semibold");
     m_title.SetFont(&m_titleFont);
-    m_bgBrush.CreateSolidBrush(RGB(255, 240, 245));
+    m_bgBrush.CreateSolidBrush(Theme::Bg);
 
     return TRUE;
 }
@@ -61,7 +64,7 @@ HBRUSH CDashboardDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
         pDC->SetBkMode(TRANSPARENT);
 
         if (pWnd->GetDlgCtrlID() == IDC_STATIC_DTITLE)
-            pDC->SetTextColor(RGB(180, 40, 100));
+            pDC->SetTextColor(Theme::GoldDark);
 
         return (HBRUSH)m_bgBrush.GetSafeHandle();
     }
