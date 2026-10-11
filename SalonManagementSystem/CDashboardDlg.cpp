@@ -9,7 +9,7 @@
 #include "CServiceDlg.h"
 #include "CStylistDlg.h"
 #include "Theme.h"
-
+#include "CAppointmentDlg.h"
 
 // CDashboardDlg dialog
 
@@ -84,8 +84,8 @@ void CDashboardDlg::OnBnClickedBtnCustomers()
 
 void CDashboardDlg::OnBnClickedBtnAppointments()
 {
-    AfxMessageBox(L"Coming soon...");
-    // TODO: Add your control notification handler code here
+    CAppointmentDlg dlg;
+    dlg.DoModal();
 }
 
 void CDashboardDlg::OnBnClickedBtnServices()

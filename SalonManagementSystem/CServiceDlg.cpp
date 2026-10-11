@@ -80,7 +80,7 @@ void CServiceDlg::LoadServices()
 	m_list.DeleteAllItems();
 
 	DBConnection db;
-	if (!db.Open()) { AfxMessageBox(L"Unable to connect to the database."); return; }
+	if (!db.Open()) { AfxMessageBox(L"Unable to connect to the database.", MB_ICONERROR); return; }
 
 	MYSQL_RES* res = db.Query("SELECT ServiceID, ServiceName, Price, Duration FROM Service");
 	if (!res) return;
@@ -105,20 +105,20 @@ void CServiceDlg::OnBnClickedBtnSadd()
 	int duration = _ttoi(m_duration);
 	if (m_name.IsEmpty() || price <= 0 || duration <= 0)
 	{
-		AfxMessageBox(L"Enter a service name, a valid price, and a duration in minutes.");
+		AfxMessageBox(L"Enter a service name, a valid price, and a duration in minutes.", MB_ICONWARNING);
 		return;
 	}
 
 	DBConnection db;
-	if (!db.Open()) { AfxMessageBox(L"Unable to connect to the database."); return; }
+	if (!db.Open()) { AfxMessageBox(L"Unable to connect to the database.", MB_ICONERROR); return; }
 
 	std::string sql = "INSERT INTO Service (ServiceName, Price, Duration) VALUES ('"
 		+ db.Escape(ToUtf8(m_name)) + "',"
 		+ std::to_string(price) + ","
 		+ std::to_string(duration) + ")";
 
-	if (db.Execute(sql)) AfxMessageBox(L"Service added successfully.");
-	else AfxMessageBox(L"Failed to add the service.");
+	if (db.Execute(sql)) AfxMessageBox(L"Service added successfully.", MB_ICONINFORMATION);
+	else AfxMessageBox(L"Failed to add the service.", MB_ICONERROR);
 
 	m_name = m_price = m_duration = L"";
 	UpdateData(FALSE);
@@ -128,41 +128,41 @@ void CServiceDlg::OnBnClickedBtnSadd()
 void CServiceDlg::OnBnClickedBtnSupdate()
 {
 	UpdateData(TRUE);
-	if (m_selectedId == 0) { AfxMessageBox(L"Please select a service from the list."); return; }
+	if (m_selectedId == 0) { AfxMessageBox(L"Please select a service from the list.", MB_ICONWARNING); return; }
 
 	double price = _tstof(m_price);
 	int duration = _ttoi(m_duration);
 	if (m_name.IsEmpty() || price <= 0 || duration <= 0)
 	{
-		AfxMessageBox(L"Enter a service name, a valid price, and a duration in minutes.");
+		AfxMessageBox(L"Enter a service name, a valid price, and a duration in minutes.", MB_ICONWARNING);
 		return;
 	}
 
 	DBConnection db;
-	if (!db.Open()) { AfxMessageBox(L"Unable to connect to the database."); return; }
+	if (!db.Open()) { AfxMessageBox(L"Unable to connect to the database.", MB_ICONERROR); return; }
 
 	std::string sql = "UPDATE Service SET ServiceName='" + db.Escape(ToUtf8(m_name))
 		+ "', Price=" + std::to_string(price)
 		+ ", Duration=" + std::to_string(duration)
 		+ " WHERE ServiceID=" + std::to_string(m_selectedId);
 
-	if (db.Execute(sql)) AfxMessageBox(L"Service updated successfully.");
-	else AfxMessageBox(L"Failed to update the service.");
+	if (db.Execute(sql)) AfxMessageBox(L"Service updated successfully.", MB_ICONINFORMATION);
+	else AfxMessageBox(L"Failed to update the service.", MB_ICONERROR);
 	LoadServices();
 }
 
 void CServiceDlg::OnBnClickedBtnSdelete()
 {
-	if (m_selectedId == 0) { AfxMessageBox(L"Please select a service from the list."); return; }
-	if (AfxMessageBox(L"Are you sure you want to delete this service?", MB_YESNO) != IDYES) return;
+	if (m_selectedId == 0) { AfxMessageBox(L"Please select a service from the list.", MB_ICONWARNING); return; }
+	if (AfxMessageBox(L"Are you sure you want to delete this service?", MB_YESNO | MB_ICONQUESTION) != IDYES) return;
 
 	DBConnection db;
-	if (!db.Open()) { AfxMessageBox(L"Unable to connect to the database."); return; }
+	if (!db.Open()) { AfxMessageBox(L"Unable to connect to the database.", MB_ICONERROR); return; }
 
 	if (db.Execute("DELETE FROM Service WHERE ServiceID=" + std::to_string(m_selectedId)))
-		AfxMessageBox(L"Service deleted successfully.");
+		AfxMessageBox(L"Service deleted successfully.", MB_ICONINFORMATION);
 	else
-		AfxMessageBox(L"Failed to delete the service.");
+		AfxMessageBox(L"Failed to delete the service.", MB_ICONERROR);
 
 	m_selectedId = 0;
 	m_name = m_price = m_duration = L"";

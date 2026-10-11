@@ -93,7 +93,7 @@ void CStylistDlg::LoadStylists()
 	m_list.DeleteAllItems();
 
 	DBConnection db;
-	if (!db.Open()) { AfxMessageBox(L"Unable to connect to the database."); return; }
+	if (!db.Open()) { AfxMessageBox(L"Unable to connect to the database.", MB_ICONERROR); return; }
 
 	MYSQL_RES* res = db.Query("SELECT StylistID, Name, Phone, Email, Speciality FROM Stylist");
 	if (!res) return;
@@ -119,7 +119,7 @@ void CStylistDlg::OnBnClickedBtnTadd()
 		Stylist s(ToUtf8(m_name), ToUtf8(m_phone), ToUtf8(m_email), ToUtf8(m_spec));
 
 		DBConnection db;
-		if (!db.Open()) { AfxMessageBox(L"Unable to connect to the database."); return; }
+		if (!db.Open()) { AfxMessageBox(L"Unable to connect to the database.", MB_ICONERROR); return; }
 
 		std::string sql = "INSERT INTO Stylist (Name, Phone, Email, Speciality) VALUES ('"
 			+ db.Escape(s.getName()) + "','"
@@ -127,12 +127,12 @@ void CStylistDlg::OnBnClickedBtnTadd()
 			+ db.Escape(s.getEmail()) + "','"
 			+ db.Escape(s.getSpeciality()) + "')";
 
-		if (db.Execute(sql)) AfxMessageBox(L"Stylist added successfully.");
-		else AfxMessageBox(L"Failed to add the stylist.");
+		if (db.Execute(sql)) AfxMessageBox(L"Stylist added successfully.", MB_ICONINFORMATION);
+		else AfxMessageBox(L"Failed to add the stylist.", MB_ICONERROR);
 	}
 	catch (const std::invalid_argument& e)
 	{
-		AfxMessageBox(FromUtf8(e.what()));
+		AfxMessageBox(FromUtf8(e.what()), MB_ICONWARNING);
 		return;
 	}
 
@@ -144,14 +144,14 @@ void CStylistDlg::OnBnClickedBtnTadd()
 void CStylistDlg::OnBnClickedBtnTupdate()
 {
 	UpdateData(TRUE);
-	if (m_selectedId == 0) { AfxMessageBox(L"Please select a stylist from the list."); return; }
+	if (m_selectedId == 0) { AfxMessageBox(L"Please select a stylist from the list.", MB_ICONWARNING); return; }
 
 	try
 	{
 		Stylist s(ToUtf8(m_name), ToUtf8(m_phone), ToUtf8(m_email), ToUtf8(m_spec));
 
 		DBConnection db;
-		if (!db.Open()) { AfxMessageBox(L"Unable to connect to the database."); return; }
+		if (!db.Open()) { AfxMessageBox(L"Unable to connect to the database.", MB_ICONERROR); return; }
 
 		std::string sql = "UPDATE Stylist SET Name='" + db.Escape(s.getName())
 			+ "', Phone='" + db.Escape(s.getPhone())
@@ -159,12 +159,12 @@ void CStylistDlg::OnBnClickedBtnTupdate()
 			+ "', Speciality='" + db.Escape(s.getSpeciality())
 			+ "' WHERE StylistID=" + std::to_string(m_selectedId);
 
-		if (db.Execute(sql)) AfxMessageBox(L"Stylist updated successfully.");
-		else AfxMessageBox(L"Failed to update the stylist.");
+		if (db.Execute(sql)) AfxMessageBox(L"Stylist updated successfully.", MB_ICONINFORMATION);
+		else AfxMessageBox(L"Failed to update the stylist.", MB_ICONERROR);
 	}
 	catch (const std::invalid_argument& e)
 	{
-		AfxMessageBox(FromUtf8(e.what()));
+		AfxMessageBox(FromUtf8(e.what()), MB_ICONWARNING);
 		return;
 	}
 	LoadStylists();
@@ -172,16 +172,16 @@ void CStylistDlg::OnBnClickedBtnTupdate()
 
 void CStylistDlg::OnBnClickedBtnTdelete()
 {
-	if (m_selectedId == 0) { AfxMessageBox(L"Please select a stylist from the list."); return; }
-	if (AfxMessageBox(L"Are you sure you want to delete this stylist?", MB_YESNO) != IDYES) return;
+	if (m_selectedId == 0) { AfxMessageBox(L"Please select a stylist from the list.", MB_ICONWARNING); return; }
+	if (AfxMessageBox(L"Are you sure you want to delete this stylist?", MB_YESNO | MB_ICONQUESTION) != IDYES) return;
 
 	DBConnection db;
-	if (!db.Open()) { AfxMessageBox(L"Unable to connect to the database."); return; }
+	if (!db.Open()) { AfxMessageBox(L"Unable to connect to the database.", MB_ICONERROR); return; }
 
 	if (db.Execute("DELETE FROM Stylist WHERE StylistID=" + std::to_string(m_selectedId)))
-		AfxMessageBox(L"Stylist deleted successfully.");
+		AfxMessageBox(L"Stylist deleted successfully.", MB_ICONINFORMATION);
 	else
-		AfxMessageBox(L"Failed to delete the stylist. They may have appointments.");
+		AfxMessageBox(L"Failed to delete the stylist. They may have appointments.", MB_ICONERROR);
 
 	m_selectedId = 0;
 	m_name = m_phone = m_email = m_spec = L"";
@@ -191,18 +191,18 @@ void CStylistDlg::OnBnClickedBtnTdelete()
 
 void CStylistDlg::OnBnClickedBtnTdetails()
 {
-	if (m_selectedId == 0) { AfxMessageBox(L"Please select a stylist from the list."); return; }
+	if (m_selectedId == 0) { AfxMessageBox(L"Please select a stylist from the list.", MB_ICONWARNING); return; }
 
 	try
 	{
 		// POLYMORPHISM: a Person pointer calls the Stylist version of getDetails()
 		std::unique_ptr<Person> p = std::make_unique<Stylist>(
 			ToUtf8(m_name), ToUtf8(m_phone), ToUtf8(m_email), ToUtf8(m_spec));
-		AfxMessageBox(FromUtf8(p->getDetails()));
+		AfxMessageBox(FromUtf8(p->getDetails()), MB_ICONINFORMATION);
 	}
 	catch (const std::invalid_argument& e)
 	{
-		AfxMessageBox(FromUtf8(e.what()));
+		AfxMessageBox(FromUtf8(e.what()), MB_ICONWARNING);
 	}
 }
 

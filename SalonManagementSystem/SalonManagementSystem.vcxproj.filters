@@ -69,6 +69,9 @@
     <ClInclude Include="Theme.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="CAppointmentDlg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="SalonManagementSystem.cpp">
@@ -92,6 +95,9 @@
     <ClCompile Include="CStylistDlg.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="CAppointmentDlg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="SalonManagementSystem.rc">
@@ -105,6 +111,9 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\SalonManagementSystem.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\..\salon_aura_logo.png">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>

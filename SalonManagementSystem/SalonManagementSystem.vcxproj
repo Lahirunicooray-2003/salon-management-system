@@ -201,6 +201,7 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="CAppointmentDlg.h" />
     <ClInclude Include="CCustomerDlg.h" />
     <ClInclude Include="CDashboardDlg.h" />
     <ClInclude Include="CServiceDlg.h" />
@@ -221,6 +222,7 @@
     <ClInclude Include="Theme.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="CAppointmentDlg.cpp" />
     <ClCompile Include="CCustomerDlg.cpp" />
     <ClCompile Include="CDashboardDlg.cpp" />
     <ClCompile Include="CServiceDlg.cpp" />
@@ -241,6 +243,7 @@
     <None Include="res\SalonManagementSystem.rc2" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="..\..\salon_aura_logo.png" />
     <Image Include="res\SalonManagementSystem.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

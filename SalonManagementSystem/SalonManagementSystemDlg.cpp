@@ -195,7 +195,7 @@ void CSalonManagementSystemDlg::OnBnClickedBtnLogin()
 		DBConnection db;
 		if (!db.Open())
 		{
-			AfxMessageBox(L"Unable to connect to the database.");
+			AfxMessageBox(L"Unable to connect to the database.", MB_ICONERROR);
 			return;
 		}
 
@@ -224,7 +224,7 @@ void CSalonManagementSystemDlg::OnBnClickedBtnLogin()
 	}
 	else
 	{
-		AfxMessageBox(L"Incorrect username or password.");
+		AfxMessageBox(L"Incorrect username or password.", MB_ICONWARNING);
 	}
 }	// TODO: Add your control notification handler code here}
 HBRUSH CSalonManagementSystemDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)

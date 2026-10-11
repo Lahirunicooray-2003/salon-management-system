@@ -81,7 +81,7 @@ void CCustomerDlg::LoadCustomers()
 	m_list.DeleteAllItems();
 
 	DBConnection db;
-	if (!db.Open()) { AfxMessageBox(L"Unable to connect to the database."); return; }
+	if (!db.Open()) { AfxMessageBox(L"Unable to connect to the database.", MB_ICONERROR); return; }
 
 	MYSQL_RES* res = db.Query("SELECT CustomerID, Name, Phone, Email FROM Customer");
 	if (!res) return;
@@ -109,19 +109,19 @@ void CCustomerDlg::OnBnClickedBtnCadd()
 		Customer c(ToUtf8(m_name), ToUtf8(m_phone), ToUtf8(m_email));
 
 		DBConnection db;
-		if (!db.Open()) { AfxMessageBox(L"Unable to connect to the database."); return; }
+		if (!db.Open()) { AfxMessageBox(L"Unable to connect to the database.", MB_ICONERROR); return; }
 
 		std::string sql = "INSERT INTO Customer (Name, Phone, Email) VALUES ('"
 			+ db.Escape(c.getName()) + "','"
 			+ db.Escape(c.getPhone()) + "','"
 			+ db.Escape(c.getEmail()) + "')";
 
-		if (db.Execute(sql)) AfxMessageBox(L"Customer added successfully.");
-		else AfxMessageBox(L"Failed to add the customer.");
+		if (db.Execute(sql)) AfxMessageBox(L"Customer added successfully.", MB_ICONINFORMATION);
+		else AfxMessageBox(L"Failed to add the customer.", MB_ICONERROR);
 	}
 	catch (const std::invalid_argument& e)
 	{
-		AfxMessageBox(CString(CA2W(e.what(), CP_UTF8)));
+		AfxMessageBox(CString(CA2W(e.what(), CP_UTF8)), MB_ICONWARNING);
 		return;
 	}
 
@@ -133,7 +133,7 @@ void CCustomerDlg::OnBnClickedBtnCadd()
 void CCustomerDlg::OnBnClickedBtnCupdate()
 {
 	UpdateData(TRUE);
-	if (m_selectedId == 0) { AfxMessageBox(L"Please select a customer from the list."); return; }
+	if (m_selectedId == 0) { AfxMessageBox(L"Please select a customer from the list.", MB_ICONWARNING); return; }
 
 	DBConnection db;
 	if (!db.Open()) return;
@@ -143,22 +143,22 @@ void CCustomerDlg::OnBnClickedBtnCupdate()
 		+ "', Email='" + db.Escape(ToUtf8(m_email))
 		+ "' WHERE CustomerID=" + std::to_string(m_selectedId);
 
-	if (db.Execute(sql)) AfxMessageBox(L"Customer updated successfully.");
-	else AfxMessageBox(L"Failed to update the customer.");
+	if (db.Execute(sql)) AfxMessageBox(L"Customer updated successfully.", MB_ICONINFORMATION);
+	else AfxMessageBox(L"Failed to update the customer.", MB_ICONERROR);
 	LoadCustomers();
 }
 
 void CCustomerDlg::OnBnClickedBtnCdelete()
 {
-	if (m_selectedId == 0) { AfxMessageBox(L"Please select a customer from the list."); return; }
-	if (AfxMessageBox(L"Are you sure you want to delete this customer?", MB_YESNO) != IDYES) return;
+	if (m_selectedId == 0) { AfxMessageBox(L"Please select a customer from the list.", MB_ICONWARNING); return; }
+	if (AfxMessageBox(L"Are you sure you want to delete this customer?", MB_YESNO | MB_ICONQUESTION) != IDYES) return;
 
 	DBConnection db;
 	if (!db.Open()) return;
 
 	if (db.Execute("DELETE FROM Customer WHERE CustomerID=" + std::to_string(m_selectedId)))
-		AfxMessageBox(L"Customer deleted successfully.");
-	else AfxMessageBox(L"Failed to delete the customer.");
+		AfxMessageBox(L"Customer deleted successfully.", MB_ICONINFORMATION);
+	else AfxMessageBox(L"Failed to delete the customer.", MB_ICONERROR);
 
 	m_selectedId = 0;
 	m_name = m_phone = m_email = L"";
