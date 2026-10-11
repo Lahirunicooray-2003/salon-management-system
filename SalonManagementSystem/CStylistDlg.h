@@ -27,6 +27,11 @@ public:
 	CListCtrl m_list;
 	int m_selectedId = 0;
 
+	CBrush m_bgBrush;
+	CFont m_titleFont;
+	HWND m_titleHwnd = nullptr;
+	afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
+
 	void LoadStylists();
 
 	afx_msg void OnBnClickedBtnTadd();
@@ -35,4 +40,6 @@ public:
 	afx_msg void OnBnClickedBtnTdetails();
 	afx_msg void OnNMClickListStylists(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnLvnItemchangedListStylists(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg void OnEnChangeEditTemail();
+	afx_msg void OnEnChangeEditTname();
 };

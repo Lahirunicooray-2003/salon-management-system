@@ -4,6 +4,7 @@
 #include "CStylistDlg.h"
 #include "DBConnection.h"
 #include "Stylist.h"
+#include "Theme.h"
 #include <string>
 #include <memory>
 
@@ -45,7 +46,10 @@ BEGIN_MESSAGE_MAP(CStylistDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BTN_TDELETE, &CStylistDlg::OnBnClickedBtnTdelete)
 	ON_BN_CLICKED(IDC_BTN_TDETAILS, &CStylistDlg::OnBnClickedBtnTdetails)
 	ON_NOTIFY(NM_CLICK, IDC_LIST_STYLISTS, &CStylistDlg::OnNMClickListStylists)
+	ON_WM_CTLCOLOR()
 	ON_NOTIFY(LVN_ITEMCHANGED, IDC_LIST_STYLISTS, &CStylistDlg::OnLvnItemchangedListStylists)
+	ON_EN_CHANGE(IDC_EDIT_TEMAIL, &CStylistDlg::OnEnChangeEditTemail)
+	ON_EN_CHANGE(IDC_EDIT_TNAME, &CStylistDlg::OnEnChangeEditTname)
 END_MESSAGE_MAP()
 
 BOOL CStylistDlg::OnInitDialog()
@@ -58,6 +62,27 @@ BOOL CStylistDlg::OnInitDialog()
 	m_list.InsertColumn(2, L"Phone", LVCFMT_LEFT, 100);
 	m_list.InsertColumn(3, L"Email", LVCFMT_LEFT, 140);
 	m_list.InsertColumn(4, L"Speciality", LVCFMT_LEFT, 100);
+
+	m_bgBrush.CreateSolidBrush(Theme::Bg);
+	m_titleFont.CreatePointFont(180, L"Segoe UI Semibold");
+
+	CWnd* pChild = GetWindow(GW_CHILD);
+	while (pChild)
+	{
+		CString txt;
+		pChild->GetWindowText(txt);
+		if (txt == L"Stylist Management")
+		{
+			pChild->SetFont(&m_titleFont);
+			m_titleHwnd = pChild->GetSafeHwnd();
+			break;
+		}
+		pChild = pChild->GetNextWindow();
+	}
+
+	m_list.SetBkColor(Theme::ListBg);
+	m_list.SetTextBkColor(Theme::ListBg);
+	m_list.SetTextColor(Theme::Text);
 
 	LoadStylists();
 	return TRUE;
@@ -200,4 +225,39 @@ void CStylistDlg::OnLvnItemchangedListStylists(NMHDR* pNMHDR, LRESULT* pResult)
 	LPNMLISTVIEW pNMLV = reinterpret_cast<LPNMLISTVIEW>(pNMHDR);
 	// TODO: Add your control notification handler code here
 	*pResult = 0;
+}
+
+void CStylistDlg::OnEnChangeEditTemail()
+{
+	// TODO:  If this is a RICHEDIT control, the control will not
+	// send this notification unless you override the CDialogEx::OnInitDialog()
+	// function and call CRichEditCtrl().SetEventMask()
+	// with the ENM_CHANGE flag ORed into the mask.
+
+	// TODO:  Add your control notification handler code here
+}
+
+void CStylistDlg::OnEnChangeEditTname()
+{
+	// TODO:  If this is a RICHEDIT control, the control will not
+	// send this notification unless you override the CDialogEx::OnInitDialog()
+	// function and call CRichEditCtrl().SetEventMask()
+	// with the ENM_CHANGE flag ORed into the mask.
+
+	// TODO:  Add your control notification handler code here
+}
+HBRUSH CStylistDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
+{
+	HBRUSH hbr = CDialogEx::OnCtlColor(pDC, pWnd, nCtlColor);
+
+	if (nCtlColor == CTLCOLOR_DLG || nCtlColor == CTLCOLOR_STATIC)
+	{
+		pDC->SetBkMode(TRANSPARENT);
+		if (pWnd->GetSafeHwnd() == m_titleHwnd)
+			pDC->SetTextColor(Theme::GoldDark);
+		else
+			pDC->SetTextColor(Theme::Text);
+		return (HBRUSH)m_bgBrush.GetSafeHandle();
+	}
+	return hbr;
 }

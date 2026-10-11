@@ -45,8 +45,6 @@
 #define IDC_BTN_TUPDATE                 1037
 #define IDC_BTN_TDELETE                 1038
 #define IDC_CTITLE                      1042
-#define IDC_MFCBUTTON4                  1046
-#define IDC_MFCBUTTON5                  1047
 #define IDD_CUSTOMER_DIALOG             32771
 
 // Next default values for new objects

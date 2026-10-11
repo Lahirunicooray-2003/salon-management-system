@@ -3,6 +3,7 @@
 #include "afxdialogex.h"
 #include "CServiceDlg.h"
 #include "DBConnection.h"
+#include "Theme.h"
 #include <string>
 
 static std::string ToUtf8(const CString& s)
@@ -36,6 +37,7 @@ BEGIN_MESSAGE_MAP(CServiceDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BTN_SUPDATE, &CServiceDlg::OnBnClickedBtnSupdate)
 	ON_BN_CLICKED(IDC_BTN_SDELETE, &CServiceDlg::OnBnClickedBtnSdelete)
 	ON_NOTIFY(NM_CLICK, IDC_LIST_SERVICES, &CServiceDlg::OnNMClickListServices)
+	ON_WM_CTLCOLOR()
 END_MESSAGE_MAP()
 
 BOOL CServiceDlg::OnInitDialog()
@@ -47,6 +49,27 @@ BOOL CServiceDlg::OnInitDialog()
 	m_list.InsertColumn(1, L"Service", LVCFMT_LEFT, 170);
 	m_list.InsertColumn(2, L"Price (Rs.)", LVCFMT_LEFT, 100);
 	m_list.InsertColumn(3, L"Duration (min)", LVCFMT_LEFT, 110);
+
+	m_bgBrush.CreateSolidBrush(Theme::Bg);
+	m_titleFont.CreatePointFont(180, L"Segoe UI Semibold");
+
+	CWnd* pChild = GetWindow(GW_CHILD);
+	while (pChild)
+	{
+		CString txt;
+		pChild->GetWindowText(txt);
+		if (txt == L"Service Management")
+		{
+			pChild->SetFont(&m_titleFont);
+			m_titleHwnd = pChild->GetSafeHwnd();
+			break;
+		}
+		pChild = pChild->GetNextWindow();
+	}
+
+	m_list.SetBkColor(Theme::ListBg);
+	m_list.SetTextBkColor(Theme::ListBg);
+	m_list.SetTextColor(Theme::Text);
 
 	LoadServices();
 	return TRUE;
@@ -159,4 +182,18 @@ void CServiceDlg::OnNMClickListServices(NMHDR* pNMHDR, LRESULT* pResult)
 		UpdateData(FALSE);
 	}
 	*pResult = 0;
+}HBRUSH CServiceDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
+{
+	HBRUSH hbr = CDialogEx::OnCtlColor(pDC, pWnd, nCtlColor);
+
+	if (nCtlColor == CTLCOLOR_DLG || nCtlColor == CTLCOLOR_STATIC)
+	{
+		pDC->SetBkMode(TRANSPARENT);
+		if (pWnd->GetSafeHwnd() == m_titleHwnd)
+			pDC->SetTextColor(Theme::GoldDark);
+		else
+			pDC->SetTextColor(Theme::Text);
+		return (HBRUSH)m_bgBrush.GetSafeHandle();
+	}
+	return hbr;
 }
