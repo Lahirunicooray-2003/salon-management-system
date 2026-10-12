@@ -29,7 +29,7 @@ void CServiceDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_LIST_SERVICES, m_list);
 	DDX_Text(pDX, IDC_EDIT_SNAME, m_name);
 	DDX_Text(pDX, IDC_EDIT_SPRICE, m_price);
-
+	DDX_Text(pDX, IDC_EDIT_SDURATION, m_duration);
 }
 
 BEGIN_MESSAGE_MAP(CServiceDlg, CDialogEx)
@@ -38,6 +38,7 @@ BEGIN_MESSAGE_MAP(CServiceDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BTN_SDELETE, &CServiceDlg::OnBnClickedBtnSdelete)
 	ON_NOTIFY(NM_CLICK, IDC_LIST_SERVICES, &CServiceDlg::OnNMClickListServices)
 	ON_WM_CTLCOLOR()
+	ON_WM_ERASEBKGND()
 END_MESSAGE_MAP()
 
 BOOL CServiceDlg::OnInitDialog()
@@ -193,13 +194,56 @@ void CServiceDlg::OnNMClickListServices(NMHDR* pNMHDR, LRESULT* pResult)
 	}
 	*pResult = 0;
 }
+
 HBRUSH CServiceDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
 {
-    if (nCtlColor == CTLCOLOR_STATIC)
-    {
-        pDC->SetBkMode(TRANSPARENT);
-        pDC->SetTextColor(RGB(166, 118, 38));   // gold-brown, cream එක උඩ පැහැදිලිව පේන්න
-        return (HBRUSH)GetStockObject(NULL_BRUSH);
-    }
-    return CDialogEx::OnCtlColor(pDC, pWnd, nCtlColor);
+	if (nCtlColor == CTLCOLOR_STATIC)
+	{
+		pDC->SetBkMode(TRANSPARENT);
+		pDC->SetTextColor(RGB(110, 72, 20));
+		return (HBRUSH)GetStockObject(NULL_BRUSH);
+	}
+	return CDialogEx::OnCtlColor(pDC, pWnd, nCtlColor);
+}
+
+BOOL CServiceDlg::OnEraseBkgnd(CDC* pDC)
+{
+	CRect rc;
+	GetClientRect(&rc);
+	Theme::PaintImageBg(*pDC, rc, _T("servicesbg.jpg"));
+
+	// semi-transparent cream plate behind every label and the title
+	for (CWnd* c = GetWindow(GW_CHILD); c != NULL; c = c->GetWindow(GW_HWNDNEXT))
+	{
+		if (!c->IsWindowVisible()) continue;
+
+		TCHAR cls[32] = { 0 };
+		GetClassName(c->GetSafeHwnd(), cls, 31);
+		if (_tcsicmp(cls, _T("Static")) != 0) continue;   // only labels / title
+
+		CRect r;
+		c->GetWindowRect(&r);
+		ScreenToClient(&r);
+		r.InflateRect(8, 3);
+		r.IntersectRect(r, rc);
+		if (r.Width() <= 0 || r.Height() <= 0) continue;
+
+		CRgn rgn;
+		rgn.CreateRoundRectRgn(r.left, r.top, r.right + 1, r.bottom + 1, 14, 14);
+		int saved = pDC->SaveDC();
+		pDC->SelectClipRgn(&rgn);
+
+		CDC mem;
+		mem.CreateCompatibleDC(pDC);
+		CBitmap bmp;
+		bmp.CreateCompatibleBitmap(pDC, r.Width(), r.Height());
+		CBitmap* old = mem.SelectObject(&bmp);
+		mem.FillSolidRect(0, 0, r.Width(), r.Height(), RGB(255, 251, 242));
+		BLENDFUNCTION bf = { AC_SRC_OVER, 0, 215, 0 };
+		AlphaBlend(pDC->GetSafeHdc(), r.left, r.top, r.Width(), r.Height(),
+			mem.GetSafeHdc(), 0, 0, r.Width(), r.Height(), bf);
+		mem.SelectObject(old);
+		pDC->RestoreDC(saved);
+	}
+	return TRUE;
 }

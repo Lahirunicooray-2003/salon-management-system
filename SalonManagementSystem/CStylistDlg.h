@@ -39,6 +39,7 @@ public:
 	CFont m_titleFont;
 	HWND m_titleHwnd = nullptr;
 	afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
+	afx_msg BOOL OnEraseBkgnd(CDC* pDC);
 
 	void LoadStylists();
 

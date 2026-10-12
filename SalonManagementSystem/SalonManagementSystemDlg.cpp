@@ -236,7 +236,7 @@ HBRUSH CSalonManagementSystemDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColo
 
 	if (nCtlColor == CTLCOLOR_STATIC)
 	{
-		pDC->SetBkMode(TRANSPARENT);
+		pDC->SetTextColor(RGB(166, 118, 38));
 
 		// keep your existing title text colour lines here
 
@@ -248,23 +248,86 @@ HBRUSH CSalonManagementSystemDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColo
 BOOL CSalonManagementSystemDlg::OnEraseBkgnd(CDC* pDC)
 {
 	CRect rc;
-	GetClientRect(rc);
-	Theme::PaintGradient(*pDC, rc);
+	GetClientRect(&rc);
 
-	// logo: as big as the space above the Username box allows
-	int availH = 250;                                   // fallback
-	CWnd* pUser = GetDlgItem(IDC_EDIT_USERNAME);
-	if (pUser != nullptr)
+	// 1) Background photo (loaded once), cropped to fill without stretching
+	static CImage bg;
+	static bool tried = false;
+	if (!tried)
 	{
-		CRect ur;
-		pUser->GetWindowRect(ur);
-		ScreenToClient(ur);
-		availH = ur.top - 30;                           // leave a small gap
+		tried = true;
+		TCHAR p[MAX_PATH];
+		GetModuleFileName(NULL, p, MAX_PATH);
+		CString path(p);
+		path = path.Left(path.ReverseFind(_T('\\')) + 1) + _T("loginbg.jpg");
+		bg.Load(path);
 	}
 
+	if (!bg.IsNull())
+	{
+		int iw = bg.GetWidth(), ih = bg.GetHeight();
+		int sw = iw, sh = ih;
+		// crop source so its aspect ratio matches the dialog
+		if (iw * rc.Height() > ih * rc.Width()) sw = ih * rc.Width() / rc.Height();
+		else                                    sh = iw * rc.Height() / rc.Width();
+		int sx = (iw - sw) / 2, sy = (ih - sh) / 2;
+		pDC->SetStretchBltMode(HALFTONE);
+		bg.Draw(pDC->GetSafeHdc(), 0, 0, rc.Width(), rc.Height(), sx, sy, sw, sh);
+	}
+	else
+	{
+		Theme::PaintGradient(*pDC, rc);
+	}
+
+	// 2) Card rectangle that wraps all controls + the logo area
+	CRect ur;
+	GetDlgItem(IDC_EDIT_USERNAME)->GetWindowRect(&ur);
+	ScreenToClient(&ur);
+
+	int availH = ur.top - 30;
 	int h = availH;
-	int w = h * 420 / 300;                              // keep logo proportions
+	int w = h * 420 / 300;
 	CRect logo((rc.Width() - w) / 2, 10, (rc.Width() + w) / 2, 10 + h);
+
+	CRect card = logo;
+	for (CWnd* c = GetWindow(GW_CHILD); c != NULL; c = c->GetWindow(GW_HWNDNEXT))
+	{
+		if (!c->IsWindowVisible()) continue;
+		CRect r;
+		c->GetWindowRect(&r);
+		ScreenToClient(&r);
+		card.UnionRect(card, r);
+	}
+	card.InflateRect(30, 12);
+	card.IntersectRect(card, rc);
+
+	// semi-transparent cream card with rounded corners
+	CRgn rgn;
+	rgn.CreateRoundRectRgn(card.left, card.top, card.right + 1, card.bottom + 1, 28, 28);
+	int saved = pDC->SaveDC();
+	pDC->SelectClipRgn(&rgn);
+
+	CDC mem;
+	mem.CreateCompatibleDC(pDC);
+	CBitmap bmp;
+	bmp.CreateCompatibleBitmap(pDC, card.Width(), card.Height());
+	CBitmap* old = mem.SelectObject(&bmp);
+	mem.FillSolidRect(0, 0, card.Width(), card.Height(), RGB(255, 251, 242));
+	BLENDFUNCTION bf = { AC_SRC_OVER, 0, 225, 0 };
+	AlphaBlend(pDC->GetSafeHdc(), card.left, card.top, card.Width(), card.Height(),
+		mem.GetSafeHdc(), 0, 0, card.Width(), card.Height(), bf);
+	mem.SelectObject(old);
+	pDC->RestoreDC(saved);
+
+	// gold border
+	CPen pen(PS_SOLID, 2, RGB(224, 196, 140));
+	CPen* op = pDC->SelectObject(&pen);
+	CBrush* ob = (CBrush*)pDC->SelectStockObject(NULL_BRUSH);
+	pDC->RoundRect(card, CPoint(28, 28));
+	pDC->SelectObject(op);
+	pDC->SelectObject(ob);
+
+	// 3) logo on the card
 	Theme::DrawLogo(*pDC, logo);
 	return TRUE;
 }

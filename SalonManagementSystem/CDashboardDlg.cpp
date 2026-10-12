@@ -28,120 +28,117 @@ CDashboardDlg::~CDashboardDlg()
 void CDashboardDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
-
-
- 
 }
 
 
 BEGIN_MESSAGE_MAP(CDashboardDlg, CDialogEx)
 	ON_WM_CTLCOLOR()
-    ON_WM_ERASEBKGND()
-    ON_BN_CLICKED(IDC_BTN_CUSTOMERS, &CDashboardDlg::OnBnClickedBtnCustomers)
-    ON_BN_CLICKED(IDC_BTN_APPOINTMENTS, &CDashboardDlg::OnBnClickedBtnAppointments)
-    ON_BN_CLICKED(IDC_BTN_SERVICES, &CDashboardDlg::OnBnClickedBtnServices)
-    ON_BN_CLICKED(IDC_BTN_STYLISTS, &CDashboardDlg::OnBnClickedBtnStylists)
-    ON_BN_CLICKED(IDC_BTN_LOGOUT, &CDashboardDlg::OnBnClickedBtnLogout)
-    ON_STN_CLICKED(IDC_STATIC_DTITLE, &CDashboardDlg::OnStnClickedStaticDtitle)
+	ON_WM_ERASEBKGND()
+	ON_BN_CLICKED(IDC_BTN_CUSTOMERS, &CDashboardDlg::OnBnClickedBtnCustomers)
+	ON_BN_CLICKED(IDC_BTN_APPOINTMENTS, &CDashboardDlg::OnBnClickedBtnAppointments)
+	ON_BN_CLICKED(IDC_BTN_SERVICES, &CDashboardDlg::OnBnClickedBtnServices)
+	ON_BN_CLICKED(IDC_BTN_STYLISTS, &CDashboardDlg::OnBnClickedBtnStylists)
+	ON_BN_CLICKED(IDC_BTN_LOGOUT, &CDashboardDlg::OnBnClickedBtnLogout)
+	ON_STN_CLICKED(IDC_STATIC_DTITLE, &CDashboardDlg::OnStnClickedStaticDtitle)
 END_MESSAGE_MAP()
 
 
 // CDashboardDlg message handlers
 BOOL CDashboardDlg::OnInitDialog()
 {
-    CDialogEx::OnInitDialog();
+	CDialogEx::OnInitDialog();
 
-    m_titleFont.CreatePointFont(160, L"Segoe UI Semibold");
+	m_titleFont.CreatePointFont(160, L"Segoe UI Semibold");
 
-    CWnd* pTitle = GetDlgItem(IDC_STATIC_DTITLE);
-    if (pTitle != nullptr)
-        pTitle->SetFont(&m_titleFont);
+	CWnd* pTitle = GetDlgItem(IDC_STATIC_DTITLE);
+	if (pTitle != nullptr)
+		pTitle->SetFont(&m_titleFont);
 
-    m_bgBrush.CreateSolidBrush(Theme::Bg);
+	m_bgBrush.CreateSolidBrush(Theme::Bg);
 
-    m_goldCustomers.SubclassDlgItem(IDC_BTN_CUSTOMERS, this);
-    m_goldServices.SubclassDlgItem(IDC_BTN_SERVICES, this);
-    m_goldStylists.SubclassDlgItem(IDC_BTN_STYLISTS, this);
-    m_goldAppointments.SubclassDlgItem(IDC_BTN_APPOINTMENTS, this);
-    m_goldLogout.SubclassDlgItem(IDC_BTN_LOGOUT, this);
+	m_goldCustomers.SubclassDlgItem(IDC_BTN_CUSTOMERS, this);
+	m_goldServices.SubclassDlgItem(IDC_BTN_SERVICES, this);
+	m_goldStylists.SubclassDlgItem(IDC_BTN_STYLISTS, this);
+	m_goldAppointments.SubclassDlgItem(IDC_BTN_APPOINTMENTS, this);
+	m_goldLogout.SubclassDlgItem(IDC_BTN_LOGOUT, this);
 
-    return TRUE;
+	return TRUE;
 }
+
 HBRUSH CDashboardDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
 {
-    HBRUSH hbr = CDialogEx::OnCtlColor(pDC, pWnd, nCtlColor);
+	HBRUSH hbr = CDialogEx::OnCtlColor(pDC, pWnd, nCtlColor);
 
-    if (nCtlColor == CTLCOLOR_STATIC)
-    {
-        pDC->SetBkMode(TRANSPARENT);
+	if (nCtlColor == CTLCOLOR_STATIC)
+	{
+		pDC->SetBkMode(TRANSPARENT);
 
-        if (pWnd->GetDlgCtrlID() == IDC_STATIC_DTITLE)
-            pDC->SetTextColor(Theme::GoldDark);
+		if (pWnd->GetDlgCtrlID() == IDC_STATIC_DTITLE)
+			pDC->SetTextColor(RGB(166, 118, 38));
 
-        return (HBRUSH)GetStockObject(NULL_BRUSH);
-    }
+		return (HBRUSH)GetStockObject(NULL_BRUSH);
+	}
 
-    return hbr;
+	return hbr;
 }
 
 void CDashboardDlg::OnBnClickedBtnCustomers()
 {
-    CCustomerDlg dlg;
-    dlg.DoModal();
-    // TODO: Add your control notification handler code here
+	CCustomerDlg dlg;
+	dlg.DoModal();
 }
 
 void CDashboardDlg::OnBnClickedBtnAppointments()
 {
-    CAppointmentDlg dlg;
-    dlg.DoModal();
+	CAppointmentDlg dlg;
+	dlg.DoModal();
 }
 
 void CDashboardDlg::OnBnClickedBtnServices()
 {
-    CServiceDlg dlg;
-    dlg.DoModal();
+	CServiceDlg dlg;
+	dlg.DoModal();
 }
 
 void CDashboardDlg::OnBnClickedBtnStylists()
 {
-    CStylistDlg dlg;
-    dlg.DoModal();
+	CStylistDlg dlg;
+	dlg.DoModal();
 }
 
 void CDashboardDlg::OnBnClickedBtnLogout()
 {
-    EndDialog(IDOK);
-    // TODO: Add your control notification handler code here
+	EndDialog(IDOK);
 }
 
 void CDashboardDlg::OnStnClickedStaticDtitle()
 {
-    // TODO: Add your control notification handler code here
 }
-
 
 
 BOOL CDashboardDlg::OnEraseBkgnd(CDC* pDC)
 {
-    CRect rc;
-    GetClientRect(rc);
-    Theme::PaintGradient(*pDC, rc);
+	CRect rc;
+	GetClientRect(rc);
 
-    CRect banner(0, 0, rc.Width(), 150);
-    Theme::DrawBanner(*pDC, banner);
+	// background photo (dashboardbg.jpg next to the .exe), gradient if missing
+	Theme::PaintImageBg(*pDC, rc, _T("dashboardbg.jpg"));
 
-    pDC->SetBkMode(TRANSPARENT);
-    pDC->SetTextColor(RGB(255, 255, 255));
+	// banner on top
+	CRect banner(0, 0, rc.Width(), 150);
+	Theme::DrawBanner(*pDC, banner);
 
-    CFont f1, f2;
-    f1.CreateFontW(-38, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, 0, L"Segoe UI");
-    f2.CreateFontW(-17, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, 0, L"Segoe UI");
+	pDC->SetBkMode(TRANSPARENT);
+	pDC->SetTextColor(RGB(255, 255, 255));
 
-    CFont* old = pDC->SelectObject(&f1);
-    pDC->TextOut(40, 36, L"Welcome, Admin");
-    pDC->SelectObject(&f2);
-    pDC->TextOut(42, 90, L"Salon Aura  -  Manage customers, services, stylists and appointments");
-    pDC->SelectObject(old);
-    return TRUE;
+	CFont f1, f2;
+	f1.CreateFontW(-38, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, 0, L"Segoe UI");
+	f2.CreateFontW(-17, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, 0, L"Segoe UI");
+
+	CFont* old = pDC->SelectObject(&f1);
+	pDC->TextOut(40, 36, L"Welcome, Admin");
+	pDC->SelectObject(&f2);
+	pDC->TextOut(42, 90, L"Salon Aura  -  Manage customers, services, stylists and appointments");
+	pDC->SelectObject(old);
+	return TRUE;
 }
