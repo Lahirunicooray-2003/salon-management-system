@@ -194,17 +194,13 @@ void CCustomerDlg::OnEnChangeEditCemail()
 
 HBRUSH CCustomerDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
 {
-	HBRUSH hbr = CDialogEx::OnCtlColor(pDC, pWnd, nCtlColor);
-
 	if (nCtlColor == CTLCOLOR_STATIC)
 	{
 		pDC->SetBkMode(TRANSPARENT);
-
-		// keep your existing title text colour lines here
-
+		pDC->SetTextColor(RGB(166, 118, 38));   // gold-brown, cream එක උඩ පැහැදිලිව පේන්න
 		return (HBRUSH)GetStockObject(NULL_BRUSH);
 	}
-	return hbr;
+	return CDialogEx::OnCtlColor(pDC, pWnd, nCtlColor);
 }
 
 BOOL CCustomerDlg::OnEraseBkgnd(CDC* pDC)

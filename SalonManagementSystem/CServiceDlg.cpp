@@ -192,18 +192,14 @@ void CServiceDlg::OnNMClickListServices(NMHDR* pNMHDR, LRESULT* pResult)
 		UpdateData(FALSE);
 	}
 	*pResult = 0;
-}HBRUSH CServiceDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
+}
+HBRUSH CServiceDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
 {
-	HBRUSH hbr = CDialogEx::OnCtlColor(pDC, pWnd, nCtlColor);
-
-	if (nCtlColor == CTLCOLOR_DLG || nCtlColor == CTLCOLOR_STATIC)
-	{
-		pDC->SetBkMode(TRANSPARENT);
-		if (pWnd->GetSafeHwnd() == m_titleHwnd)
-			pDC->SetTextColor(Theme::GoldDark);
-		else
-			pDC->SetTextColor(Theme::Text);
-		return (HBRUSH)m_bgBrush.GetSafeHandle();
-	}
-	return hbr;
+    if (nCtlColor == CTLCOLOR_STATIC)
+    {
+        pDC->SetBkMode(TRANSPARENT);
+        pDC->SetTextColor(RGB(166, 118, 38));   // gold-brown, cream එක උඩ පැහැදිලිව පේන්න
+        return (HBRUSH)GetStockObject(NULL_BRUSH);
+    }
+    return CDialogEx::OnCtlColor(pDC, pWnd, nCtlColor);
 }

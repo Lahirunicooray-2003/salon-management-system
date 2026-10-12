@@ -35,9 +35,9 @@ public:
 	afx_msg void OnStnClickedStaticDtitle();
     
 	public:
-	CGoldButton m_goldCustomers;
-	CGoldButton m_goldServices;
-	CGoldButton m_goldStylists;
-	CGoldButton m_goldAppointments;
-	CGoldButton m_goldLogout;
+		CCardButton m_goldCustomers;
+		CCardButton m_goldServices;
+		CCardButton m_goldStylists;
+		CCardButton m_goldAppointments;
+		CGoldButton m_goldLogout;
 };

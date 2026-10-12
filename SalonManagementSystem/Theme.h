@@ -97,3 +97,86 @@ namespace Theme
         }
     }
 }
+
+namespace Theme
+{
+    // draws banner.png (next to the .exe), falls back to plain gold
+    inline void DrawBanner(CDC& dc, CRect rc)
+    {
+        TCHAR p[MAX_PATH];
+        GetModuleFileName(NULL, p, MAX_PATH);
+        CString s(p);
+        s = s.Left(s.ReverseFind(L'\\') + 1) + L"banner.png";
+
+        CImage img;
+        if (SUCCEEDED(img.Load(s)))
+        {
+            dc.SetStretchBltMode(HALFTONE);
+            img.Draw(dc.GetSafeHdc(), rc);
+        }
+        else
+            dc.FillSolidRect(rc, RGB(196, 146, 60));
+    }
+}
+
+// card style button: caption format "Title|Short description"
+class CCardButton : public CButton
+{
+public:
+    void DrawItem(LPDRAWITEMSTRUCT d) override
+    {
+        CDC* dc = CDC::FromHandle(d->hDC);
+        CRect rc = d->rcItem;
+        bool down = (d->itemState & ODS_SELECTED) != 0;
+
+        CString cap; GetWindowText(cap);
+        CString title = cap, sub;
+        int p = cap.Find(L'|');
+        if (p >= 0) { title = cap.Left(p); sub = cap.Mid(p + 1); }
+
+        dc->FillSolidRect(rc, Theme::Cream);
+        CBrush br(down ? RGB(246, 238, 222) : RGB(255, 255, 255));
+        CPen pen(PS_SOLID, 1, RGB(232, 215, 180));
+        CBrush* ob = dc->SelectObject(&br);
+        CPen* op = dc->SelectObject(&pen);
+        dc->RoundRect(rc, CPoint(18, 18));
+        dc->SelectObject(ob); dc->SelectObject(op);
+
+        int H = rc.Height();
+        int dia = H * 46 / 100;
+        CRect ic(rc.left + 18, rc.top + (H - dia) / 2,
+            rc.left + 18 + dia, rc.top + (H - dia) / 2 + dia);
+        CBrush ib(RGB(246, 232, 196));
+        CPen ip(PS_SOLID, 1, RGB(246, 232, 196));
+        ob = dc->SelectObject(&ib); op = dc->SelectObject(&ip);
+        dc->Ellipse(ic);
+        dc->SelectObject(ob); dc->SelectObject(op);
+
+        CFont fi, ft, fs, fo;
+        fi.CreateFontW(-(dia * 55 / 100), 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, 0, L"Segoe UI");
+        ft.CreateFontW(-(H * 26 / 100), 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, 0, L"Segoe UI");
+        fs.CreateFontW(-(H * 15 / 100), 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, 0, L"Segoe UI");
+        fo.CreateFontW(-(H * 15 / 100), 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, 0, L"Segoe UI");
+
+        dc->SetBkMode(TRANSPARENT);
+
+        CFont* of = dc->SelectObject(&fi);
+        dc->SetTextColor(Theme::GoldDark);
+        dc->DrawText(title.Left(1), ic, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+
+        int tx = ic.right + 20;
+        dc->SelectObject(&ft);
+        dc->SetTextColor(RGB(50, 40, 25));
+        dc->TextOut(tx, rc.top + H * 12 / 100, title);
+
+        dc->SelectObject(&fs);
+        dc->SetTextColor(RGB(120, 110, 95));
+        dc->TextOut(tx, rc.top + H * 44 / 100, sub);
+
+        dc->SelectObject(&fo);
+        dc->SetTextColor(Theme::Gold);
+        dc->TextOut(tx, rc.top + H * 68 / 100, L"Open  \u2192");
+
+        dc->SelectObject(of);
+    }
+};

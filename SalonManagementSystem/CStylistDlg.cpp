@@ -259,16 +259,11 @@ void CStylistDlg::OnEnChangeEditTname()
 }
 HBRUSH CStylistDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
 {
-	HBRUSH hbr = CDialogEx::OnCtlColor(pDC, pWnd, nCtlColor);
-
-	if (nCtlColor == CTLCOLOR_DLG || nCtlColor == CTLCOLOR_STATIC)
+	if (nCtlColor == CTLCOLOR_STATIC)
 	{
 		pDC->SetBkMode(TRANSPARENT);
-		if (pWnd->GetSafeHwnd() == m_titleHwnd)
-			pDC->SetTextColor(Theme::GoldDark);
-		else
-			pDC->SetTextColor(Theme::Text);
-		return (HBRUSH)m_bgBrush.GetSafeHandle();
+		pDC->SetTextColor(RGB(166, 118, 38));   // gold-brown, cream එක උඩ පැහැදිලිව පේන්න
+		return (HBRUSH)GetStockObject(NULL_BRUSH);
 	}
-	return hbr;
+	return CDialogEx::OnCtlColor(pDC, pWnd, nCtlColor);
 }

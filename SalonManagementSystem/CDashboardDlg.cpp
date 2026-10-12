@@ -128,20 +128,20 @@ BOOL CDashboardDlg::OnEraseBkgnd(CDC* pDC)
     GetClientRect(rc);
     Theme::PaintGradient(*pDC, rc);
 
-    // logo: as big as the space above the buttons allows
-    int availH = 200;                                   // fallback
-    CWnd* pBtn = GetDlgItem(IDC_BTN_CUSTOMERS);
-    if (pBtn != nullptr)
-    {
-        CRect br;
-        pBtn->GetWindowRect(br);
-        ScreenToClient(br);
-        availH = br.top - 100;                          // leaves room for "Welcome" text
-    }
+    CRect banner(0, 0, rc.Width(), 150);
+    Theme::DrawBanner(*pDC, banner);
 
-    int h = availH;
-    int w = h * 420 / 300;                              // keep logo proportions
-    CRect logo((rc.Width() - w) / 2, 10, (rc.Width() + w) / 2, 10 + h);
-    Theme::DrawLogo(*pDC, logo);
+    pDC->SetBkMode(TRANSPARENT);
+    pDC->SetTextColor(RGB(255, 255, 255));
+
+    CFont f1, f2;
+    f1.CreateFontW(-38, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, 0, L"Segoe UI");
+    f2.CreateFontW(-17, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, 0, L"Segoe UI");
+
+    CFont* old = pDC->SelectObject(&f1);
+    pDC->TextOut(40, 36, L"Welcome, Admin");
+    pDC->SelectObject(&f2);
+    pDC->TextOut(42, 90, L"Salon Aura  -  Manage customers, services, stylists and appointments");
+    pDC->SelectObject(old);
     return TRUE;
 }
