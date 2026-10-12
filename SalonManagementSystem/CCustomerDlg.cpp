@@ -1,26 +1,28 @@
-// CCustomerDlg.cpp : implementation file
-//
-
 #include "pch.h"
 #include "SalonManagementSystem.h"
 #include "afxdialogex.h"
 #include "CCustomerDlg.h"
 #include "DBConnection.h"
 #include "Customer.h"
-#include <string>
 #include "Theme.h"
 
-// CString (wide) -> std::string (UTF-8)
+#include <string>
+#include <stdexcept>
+
+#include <afxcmn.h>
+#include <afxwin.h>
+
+// CString -> UTF-8
 static std::string ToUtf8(const CString& s)
 {
-	CStringA a(CW2A(s, CP_UTF8));
-	return std::string(a);
+    CStringA a(CW2A(s, CP_UTF8));
+    return std::string(a);
 }
 
 IMPLEMENT_DYNAMIC(CCustomerDlg, CDialogEx)
 
-CCustomerDlg::CCustomerDlg(CWnd* pParent /*=nullptr*/)
-	: CDialogEx(IDD_CUSTOMER_DIALOG, pParent)
+CCustomerDlg::CCustomerDlg(CWnd* pParent)
+    : CDialogEx(IDD_CUSTOMER_DIALOG, pParent)
 {
 }
 
@@ -30,217 +32,512 @@ CCustomerDlg::~CCustomerDlg()
 
 void CCustomerDlg::DoDataExchange(CDataExchange* pDX)
 {
-	CDialogEx::DoDataExchange(pDX);
-	DDX_Text(pDX, IDC_EDIT_CNAME, m_name);
-	DDX_Text(pDX, IDC_EDIT_CPHONE, m_phone);
-	DDX_Text(pDX, IDC_EDIT_CEMAIL, m_email);
-	DDX_Control(pDX, IDC_LIST_CUSTOMERS, m_list);
+    CDialogEx::DoDataExchange(pDX);
 
-	DDX_Control(pDX, IDC_CTITLE, m_title);
-	DDX_Control(pDX, IDC_BTN_CADD, m_btnAdd);
-	DDX_Control(pDX, IDC_BTN_CUPDATE, m_btnUpdate);
-	DDX_Control(pDX, IDC_BTN_CDELETE, m_btnDelete);
+    DDX_Text(pDX, IDC_EDIT_CNAME, m_name);
+    DDX_Text(pDX, IDC_EDIT_CPHONE, m_phone);
+    DDX_Text(pDX, IDC_EDIT_CEMAIL, m_email);
+
+    DDX_Control(pDX, IDC_LIST_CUSTOMERS, m_list);
+    DDX_Control(pDX, IDC_CTITLE, m_title);
+
+    DDX_Control(pDX, IDC_BTN_CADD, m_btnAdd);
+    DDX_Control(pDX, IDC_BTN_CUPDATE, m_btnUpdate);
+    DDX_Control(pDX, IDC_BTN_CDELETE, m_btnDelete);
 }
 
 BEGIN_MESSAGE_MAP(CCustomerDlg, CDialogEx)
-	ON_BN_CLICKED(IDC_BTN_CADD, &CCustomerDlg::OnBnClickedBtnCadd)
-	ON_BN_CLICKED(IDC_BTN_CUPDATE, &CCustomerDlg::OnBnClickedBtnCupdate)
-	ON_BN_CLICKED(IDC_BTN_CDELETE, &CCustomerDlg::OnBnClickedBtnCdelete)
-	ON_NOTIFY(NM_CLICK, IDC_LIST_CUSTOMERS, &CCustomerDlg::OnNMClickListCustomers)
-	ON_WM_CTLCOLOR()
-	ON_WM_ERASEBKGND()
-	ON_EN_CHANGE(IDC_EDIT_CEMAIL, &CCustomerDlg::OnEnChangeEditCemail)
+
+    ON_BN_CLICKED(IDC_BTN_CADD,
+        &CCustomerDlg::OnBnClickedBtnCadd)
+
+    ON_BN_CLICKED(IDC_BTN_CUPDATE,
+        &CCustomerDlg::OnBnClickedBtnCupdate)
+
+    ON_BN_CLICKED(IDC_BTN_CDELETE,
+        &CCustomerDlg::OnBnClickedBtnCdelete)
+
+    ON_NOTIFY(NM_CLICK, IDC_LIST_CUSTOMERS,
+        &CCustomerDlg::OnNMClickListCustomers)
+
+    ON_NOTIFY(NM_CUSTOMDRAW, IDC_LIST_CUSTOMERS,
+        &CCustomerDlg::OnNMCustomdrawListCustomers)
+
+    ON_WM_CTLCOLOR()
+    ON_WM_ERASEBKGND()
+
 END_MESSAGE_MAP()
+
 
 BOOL CCustomerDlg::OnInitDialog()
 {
-	CDialogEx::OnInitDialog();
+    CDialogEx::OnInitDialog();
 
-	m_goldBack.SubclassDlgItem(IDCANCEL, this);
+    // Back button
+    m_goldBack.SubclassDlgItem(IDCANCEL, this);
 
-	m_list.SetExtendedStyle(LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES);
-	m_list.InsertColumn(0, L"ID", LVCFMT_LEFT, 50);
-	m_list.InsertColumn(1, L"Name", LVCFMT_LEFT, 150);
-	m_list.InsertColumn(2, L"Phone", LVCFMT_LEFT, 120);
-	m_list.InsertColumn(3, L"Email", LVCFMT_LEFT, 180);
+    // Title
+    m_titleFont.CreatePointFont(180, L"Segoe UI Semibold");
+    m_title.SetFont(&m_titleFont);
 
-	m_bgBrush.CreateSolidBrush(Theme::Bg);
-	m_titleFont.CreatePointFont(180, L"Segoe UI Semibold");
-	m_title.SetFont(&m_titleFont);
+    // Gold buttons
+    StyleGoldButton(m_btnAdd);
+    StyleGoldButton(m_btnUpdate);
+    StyleGoldButton(m_btnDelete);
 
-	StyleGoldButton(m_btnAdd);
-	StyleGoldButton(m_btnUpdate);
-	StyleGoldButton(m_btnDelete);
+    // Customer table
+    m_list.SetExtendedStyle(
+        LVS_EX_FULLROWSELECT |
+        LVS_EX_GRIDLINES |
+        LVS_EX_DOUBLEBUFFER
+    );
 
-	m_list.SetBkColor(Theme::ListBg);
-	m_list.SetTextBkColor(Theme::ListBg);
-	m_list.SetTextColor(Theme::Text);
+    // Insert columns
+    m_list.InsertColumn(0, L"ID", LVCFMT_LEFT, 60);
+    m_list.InsertColumn(1, L"Name", LVCFMT_LEFT, 170);
+    m_list.InsertColumn(2, L"Phone", LVCFMT_LEFT, 150);
+    m_list.InsertColumn(3, L"Email", LVCFMT_LEFT, 230);
 
-	LoadCustomers();
-	return TRUE;
+    // Cream table background
+    m_list.SetBkColor(RGB(255, 250, 240));
+    m_list.SetTextBkColor(RGB(255, 250, 240));
+    m_list.SetTextColor(RGB(90, 65, 45));
+
+    // Table font
+    m_tableFont.CreatePointFont(100, L"Segoe UI");
+    m_list.SetFont(&m_tableFont);
+
+    // Background brushes
+    m_bgBrush.CreateSolidBrush(RGB(255, 248, 235));
+    m_editBrush.CreateSolidBrush(RGB(255, 252, 246));
+
+    // Initial selection
+    m_selectedId = 0;
+
+    // Load database records
+    LoadCustomers();
+
+    return TRUE;
 }
+
+
+// ---------------------------------------------
+// LOAD CUSTOMERS
+// ---------------------------------------------
 
 void CCustomerDlg::LoadCustomers()
 {
-	m_list.DeleteAllItems();
+    m_list.DeleteAllItems();
 
-	DBConnection db;
-	if (!db.Open()) { AfxMessageBox(L"Unable to connect to the database.", MB_ICONERROR); return; }
+    DBConnection db;
 
-	MYSQL_RES* res = db.Query("SELECT CustomerID, Name, Phone, Email FROM Customer");
-	if (!res) return;
+    if (!db.Open())
+    {
+        AfxMessageBox(
+            L"Unable to connect to the database.",
+            MB_ICONERROR
+        );
+        return;
+    }
 
-	MYSQL_ROW row;
-	int i = 0;
-	while ((row = mysql_fetch_row(res)))
-	{
-		m_list.InsertItem(i, CString(CA2W(row[0] ? row[0] : "", CP_UTF8)));
-		m_list.SetItemText(i, 1, CString(CA2W(row[1] ? row[1] : "", CP_UTF8)));
-		m_list.SetItemText(i, 2, CString(CA2W(row[2] ? row[2] : "", CP_UTF8)));
-		m_list.SetItemText(i, 3, CString(CA2W(row[3] ? row[3] : "", CP_UTF8)));
-		i++;
-	}
-	mysql_free_result(res);
+    MYSQL_RES* res = db.Query(
+        "SELECT CustomerID, Name, Phone, Email "
+        "FROM Customer ORDER BY CustomerID"
+    );
 
-	m_list.SetColumnWidth(0, 60);                          // ID
-	m_list.SetColumnWidth(1, LVSCW_AUTOSIZE_USEHEADER);    // Name
-	m_list.SetColumnWidth(2, LVSCW_AUTOSIZE_USEHEADER);    // Phone
-	m_list.SetColumnWidth(3, LVSCW_AUTOSIZE_USEHEADER);    // Email
+    if (!res)
+    {
+        AfxMessageBox(
+            L"Unable to load customer records.",
+            MB_ICONERROR
+        );
+        return;
+    }
+
+    MYSQL_ROW row;
+    int i = 0;
+
+    while ((row = mysql_fetch_row(res)))
+    {
+        m_list.InsertItem(
+            i,
+            CString(CA2W(row[0] ? row[0] : "", CP_UTF8))
+        );
+
+        m_list.SetItemText(
+            i, 1,
+            CString(CA2W(row[1] ? row[1] : "", CP_UTF8))
+        );
+
+        m_list.SetItemText(
+            i, 2,
+            CString(CA2W(row[2] ? row[2] : "", CP_UTF8))
+        );
+
+        m_list.SetItemText(
+            i, 3,
+            CString(CA2W(row[3] ? row[3] : "", CP_UTF8))
+        );
+
+        ++i;
+    }
+
+    mysql_free_result(res);
+
+    // Adjust column widths
+    m_list.SetColumnWidth(0, 60);
+    m_list.SetColumnWidth(1, LVSCW_AUTOSIZE_USEHEADER);
+    m_list.SetColumnWidth(2, LVSCW_AUTOSIZE_USEHEADER);
+    m_list.SetColumnWidth(3, LVSCW_AUTOSIZE_USEHEADER);
+
+    m_list.Invalidate();
 }
+
+
+// ---------------------------------------------
+// ADD CUSTOMER
+// ---------------------------------------------
 
 void CCustomerDlg::OnBnClickedBtnCadd()
 {
-	UpdateData(TRUE);
+    if (!UpdateData(TRUE))
+        return;
 
-	try
-	{
-		// OBJECT: created here; validation happens inside the setters
-		Customer c(ToUtf8(m_name), ToUtf8(m_phone), ToUtf8(m_email));
+    try
+    {
+        Customer c(
+            ToUtf8(m_name),
+            ToUtf8(m_phone),
+            ToUtf8(m_email)
+        );
 
-		DBConnection db;
-		if (!db.Open()) { AfxMessageBox(L"Unable to connect to the database.", MB_ICONERROR); return; }
+        DBConnection db;
 
-		std::string sql = "INSERT INTO Customer (Name, Phone, Email) VALUES ('"
-			+ db.Escape(c.getName()) + "','"
-			+ db.Escape(c.getPhone()) + "','"
-			+ db.Escape(c.getEmail()) + "')";
+        if (!db.Open())
+        {
+            AfxMessageBox(
+                L"Unable to connect to the database.",
+                MB_ICONERROR
+            );
+            return;
+        }
 
-		if (db.Execute(sql)) AfxMessageBox(L"Customer added successfully.", MB_ICONINFORMATION);
-		else AfxMessageBox(L"Failed to add the customer.", MB_ICONERROR);
-	}
-	catch (const std::invalid_argument& e)
-	{
-		AfxMessageBox(CString(CA2W(e.what(), CP_UTF8)), MB_ICONWARNING);
-		return;
-	}
+        std::string sql =
+            "INSERT INTO Customer (Name, Phone, Email) VALUES ('" +
+            db.Escape(c.getName()) + "','" +
+            db.Escape(c.getPhone()) + "','" +
+            db.Escape(c.getEmail()) + "')";
 
-	m_name = m_phone = m_email = L"";
-	UpdateData(FALSE);
-	LoadCustomers();
+        if (db.Execute(sql))
+        {
+            AfxMessageBox(
+                L"Customer added successfully.",
+                MB_ICONINFORMATION
+            );
+
+            m_selectedId = 0;
+            m_name.Empty();
+            m_phone.Empty();
+            m_email.Empty();
+
+            UpdateData(FALSE);
+            LoadCustomers();
+        }
+        else
+        {
+            AfxMessageBox(
+                L"Failed to add the customer.",
+                MB_ICONERROR
+            );
+        }
+    }
+    catch (const std::invalid_argument& e)
+    {
+        AfxMessageBox(
+            CString(CA2W(e.what(), CP_UTF8)),
+            MB_ICONWARNING
+        );
+    }
 }
+
+
+// ---------------------------------------------
+// UPDATE CUSTOMER
+// ---------------------------------------------
 
 void CCustomerDlg::OnBnClickedBtnCupdate()
 {
-	UpdateData(TRUE);
-	if (m_selectedId == 0) { AfxMessageBox(L"Please select a customer from the list.", MB_ICONWARNING); return; }
+    if (!UpdateData(TRUE))
+        return;
 
-	DBConnection db;
-	if (!db.Open()) return;
+    if (m_selectedId == 0)
+    {
+        AfxMessageBox(
+            L"Please select a customer from the list.",
+            MB_ICONWARNING
+        );
+        return;
+    }
 
-	std::string sql = "UPDATE Customer SET Name='" + db.Escape(ToUtf8(m_name))
-		+ "', Phone='" + db.Escape(ToUtf8(m_phone))
-		+ "', Email='" + db.Escape(ToUtf8(m_email))
-		+ "' WHERE CustomerID=" + std::to_string(m_selectedId);
+    try
+    {
+        Customer c(
+            ToUtf8(m_name),
+            ToUtf8(m_phone),
+            ToUtf8(m_email)
+        );
 
-	if (db.Execute(sql)) AfxMessageBox(L"Customer updated successfully.", MB_ICONINFORMATION);
-	else AfxMessageBox(L"Failed to update the customer.", MB_ICONERROR);
-	LoadCustomers();
+        DBConnection db;
+
+        if (!db.Open())
+        {
+            AfxMessageBox(
+                L"Unable to connect to the database.",
+                MB_ICONERROR
+            );
+            return;
+        }
+
+        std::string sql =
+            "UPDATE Customer SET Name='" +
+            db.Escape(c.getName()) +
+            "', Phone='" +
+            db.Escape(c.getPhone()) +
+            "', Email='" +
+            db.Escape(c.getEmail()) +
+            "' WHERE CustomerID=" +
+            std::to_string(m_selectedId);
+
+        if (db.Execute(sql))
+        {
+            AfxMessageBox(
+                L"Customer updated successfully.",
+                MB_ICONINFORMATION
+            );
+
+            LoadCustomers();
+        }
+        else
+        {
+            AfxMessageBox(
+                L"Failed to update the customer.",
+                MB_ICONERROR
+            );
+        }
+    }
+    catch (const std::invalid_argument& e)
+    {
+        AfxMessageBox(
+            CString(CA2W(e.what(), CP_UTF8)),
+            MB_ICONWARNING
+        );
+    }
 }
+
+
+// ---------------------------------------------
+// DELETE CUSTOMER
+// ---------------------------------------------
 
 void CCustomerDlg::OnBnClickedBtnCdelete()
 {
-	if (m_selectedId == 0) { AfxMessageBox(L"Please select a customer from the list.", MB_ICONWARNING); return; }
-	if (AfxMessageBox(L"Are you sure you want to delete this customer?", MB_YESNO | MB_ICONQUESTION) != IDYES) return;
+    if (m_selectedId == 0)
+    {
+        AfxMessageBox(
+            L"Please select a customer from the list.",
+            MB_ICONWARNING
+        );
+        return;
+    }
 
-	DBConnection db;
-	if (!db.Open()) return;
+    if (AfxMessageBox(
+        L"Are you sure you want to delete this customer?",
+        MB_YESNO | MB_ICONQUESTION
+    ) != IDYES)
+    {
+        return;
+    }
 
-	if (db.Execute("DELETE FROM Customer WHERE CustomerID=" + std::to_string(m_selectedId)))
-		AfxMessageBox(L"Customer deleted successfully.", MB_ICONINFORMATION);
-	else AfxMessageBox(L"Failed to delete the customer.", MB_ICONERROR);
+    DBConnection db;
 
-	m_selectedId = 0;
-	m_name = m_phone = m_email = L"";
-	UpdateData(FALSE);
-	LoadCustomers();
+    if (!db.Open())
+    {
+        AfxMessageBox(
+            L"Unable to connect to the database.",
+            MB_ICONERROR
+        );
+        return;
+    }
+
+    std::string sql =
+        "DELETE FROM Customer WHERE CustomerID=" +
+        std::to_string(m_selectedId);
+
+    if (db.Execute(sql))
+    {
+        AfxMessageBox(
+            L"Customer deleted successfully.",
+            MB_ICONINFORMATION
+        );
+
+        m_selectedId = 0;
+        m_name.Empty();
+        m_phone.Empty();
+        m_email.Empty();
+
+        UpdateData(FALSE);
+        LoadCustomers();
+    }
+    else
+    {
+        AfxMessageBox(
+            L"Failed to delete the customer.",
+            MB_ICONERROR
+        );
+    }
 }
 
-void CCustomerDlg::OnNMClickListCustomers(NMHDR* pNMHDR, LRESULT* pResult)
+
+// ---------------------------------------------
+// SELECT CUSTOMER FROM TABLE
+// ---------------------------------------------
+
+void CCustomerDlg::OnNMClickListCustomers(
+    NMHDR* pNMHDR,
+    LRESULT* pResult)
 {
-	LPNMITEMACTIVATE p = reinterpret_cast<LPNMITEMACTIVATE>(pNMHDR);
-	if (p->iItem >= 0)
-	{
-		m_selectedId = _ttoi(m_list.GetItemText(p->iItem, 0));
-		m_name = m_list.GetItemText(p->iItem, 1);
-		m_phone = m_list.GetItemText(p->iItem, 2);
-		m_email = m_list.GetItemText(p->iItem, 3);
-		UpdateData(FALSE);
-	}
-	*pResult = 0;
-}
-void CCustomerDlg::OnEnChangeEditCemail()
-{
+    UNREFERENCED_PARAMETER(pNMHDR);
+
+    int index = m_list.GetNextItem(
+        -1, LVNI_SELECTED
+    );
+
+    if (index >= 0)
+    {
+        m_selectedId = _ttoi(
+            m_list.GetItemText(index, 0)
+        );
+
+        m_name = m_list.GetItemText(index, 1);
+        m_phone = m_list.GetItemText(index, 2);
+        m_email = m_list.GetItemText(index, 3);
+
+        UpdateData(FALSE);
+    }
+
+    *pResult = 0;
 }
 
-HBRUSH CCustomerDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
+
+// ---------------------------------------------
+// TABLE COLOUR STYLING
+// ---------------------------------------------
+
+void CCustomerDlg::OnNMCustomdrawListCustomers(
+    NMHDR* pNMHDR,
+    LRESULT* pResult)
 {
-	if (nCtlColor == CTLCOLOR_STATIC)
-	{
-		pDC->SetBkMode(TRANSPARENT);
-		pDC->SetTextColor(RGB(110, 72, 20));
-		return (HBRUSH)GetStockObject(NULL_BRUSH);
-	}
-	return CDialogEx::OnCtlColor(pDC, pWnd, nCtlColor);
+    LPNMLVCUSTOMDRAW pLVCD =
+        reinterpret_cast<LPNMLVCUSTOMDRAW>(pNMHDR);
+
+    switch (pLVCD->nmcd.dwDrawStage)
+    {
+    case CDDS_PREPAINT:
+        *pResult = CDRF_NOTIFYITEMDRAW;
+        return;
+
+    case CDDS_ITEMPREPAINT:
+        *pResult = CDRF_NOTIFYSUBITEMDRAW;
+        return;
+
+    case CDDS_ITEMPREPAINT | CDDS_SUBITEM:
+    {
+        int row = static_cast<int>(
+            pLVCD->nmcd.dwItemSpec
+            );
+
+        // Alternating cream shades
+        if (row % 2 == 0)
+        {
+            pLVCD->clrTextBk = RGB(255, 250, 240);
+        }
+        else
+        {
+            pLVCD->clrTextBk = RGB(247, 238, 220);
+        }
+
+        pLVCD->clrText = RGB(90, 65, 45);
+
+        *pResult = CDRF_DODEFAULT;
+        return;
+    }
+    }
+
+    *pResult = CDRF_DODEFAULT;
 }
+
+
+// ---------------------------------------------
+// LABEL AND INPUT COLOURS
+// ---------------------------------------------
+
+HBRUSH CCustomerDlg::OnCtlColor(
+    CDC* pDC,
+    CWnd* pWnd,
+    UINT nCtlColor)
+{
+    int id = pWnd->GetDlgCtrlID();
+
+    if (nCtlColor == CTLCOLOR_STATIC)
+    {
+        pDC->SetBkMode(TRANSPARENT);
+        pDC->SetTextColor(RGB(110, 72, 35));
+
+        return (HBRUSH)GetStockObject(NULL_BRUSH);
+    }
+
+    if (nCtlColor == CTLCOLOR_EDIT)
+    {
+        pDC->SetTextColor(RGB(75, 55, 40));
+        pDC->SetBkColor(RGB(255, 252, 246));
+
+        return m_editBrush.GetSafeHandle()
+            ? (HBRUSH)m_editBrush.GetSafeHandle()
+            : (HBRUSH)GetStockObject(WHITE_BRUSH);
+    }
+
+    if (nCtlColor == CTLCOLOR_LISTBOX)
+    {
+        pDC->SetTextColor(RGB(90, 65, 45));
+        pDC->SetBkColor(RGB(255, 250, 240));
+
+        return (HBRUSH)m_bgBrush.GetSafeHandle();
+    }
+
+    UNREFERENCED_PARAMETER(id);
+
+    return CDialogEx::OnCtlColor(
+        pDC, pWnd, nCtlColor
+    );
+}
+
+
+// ---------------------------------------------
+// BACKGROUND IMAGE AND PANEL
+// ---------------------------------------------
 
 BOOL CCustomerDlg::OnEraseBkgnd(CDC* pDC)
 {
-	CRect rc;
-	GetClientRect(&rc);
-	Theme::PaintImageBg(*pDC, rc, _T("customersbg.jpg"));
+    CRect rc;
+    GetClientRect(&rc);
 
-	// semi-transparent cream plate behind every label and the title
-	for (CWnd* c = GetWindow(GW_CHILD); c != NULL; c = c->GetWindow(GW_HWNDNEXT))
-	{
-		if (!c->IsWindowVisible()) continue;
+    // Background image ආපහු සක්‍රීය කරන ලදී
+    Theme::PaintImageBg(
+        *pDC, rc, _T("customersbg.jpg")
+    );
 
-		TCHAR cls[32] = { 0 };
-		GetClassName(c->GetSafeHwnd(), cls, 31);
-		if (_tcsicmp(cls, _T("Static")) != 0) continue;   // only labels / title
+    // Cream form panel
+    Theme::DrawFormPanel(this, *pDC);
 
-		CRect r;
-		c->GetWindowRect(&r);
-		ScreenToClient(&r);
-		r.InflateRect(8, 3);
-		r.IntersectRect(r, rc);
-		if (r.Width() <= 0 || r.Height() <= 0) continue;
-
-		CRgn rgn;
-		rgn.CreateRoundRectRgn(r.left, r.top, r.right + 1, r.bottom + 1, 14, 14);
-		int saved = pDC->SaveDC();
-		pDC->SelectClipRgn(&rgn);
-
-		CDC mem;
-		mem.CreateCompatibleDC(pDC);
-		CBitmap bmp;
-		bmp.CreateCompatibleBitmap(pDC, r.Width(), r.Height());
-		CBitmap* old = mem.SelectObject(&bmp);
-		mem.FillSolidRect(0, 0, r.Width(), r.Height(), RGB(255, 251, 242));
-		BLENDFUNCTION bf = { AC_SRC_OVER, 0, 215, 0 };
-		AlphaBlend(pDC->GetSafeHdc(), r.left, r.top, r.Width(), r.Height(),
-			mem.GetSafeHdc(), 0, 0, r.Width(), r.Height(), bf);
-		mem.SelectObject(old);
-		pDC->RestoreDC(saved);
-	}
-	return TRUE;
+    return TRUE;
 }

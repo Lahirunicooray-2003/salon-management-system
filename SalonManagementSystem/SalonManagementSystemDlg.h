@@ -1,47 +1,43 @@
-
-// SalonManagementSystemDlg.h : header file
-//
-
 #pragma once
-#include "Theme.h"
 
+#include "Theme.h"
 
 // CSalonManagementSystemDlg dialog
 class CSalonManagementSystemDlg : public CDialogEx
 {
-// Construction
+    // Construction
 public:
-	CGoldButton m_goldLogin;
+    CGoldButton m_goldLogin;
+    CSalonManagementSystemDlg(CWnd* pParent = nullptr);    // standard constructor
 
-	CSalonManagementSystemDlg(CWnd* pParent = nullptr);	// standard constructor
-
-// Dialog Data
+    // Dialog Data
 #ifdef AFX_DESIGN_TIME
-	enum { IDD = IDD_SALONMANAGEMENTSYSTEM_DIALOG };
+    enum { IDD = IDD_SALONMANAGEMENTSYSTEM_DIALOG };
 #endif
 
-	protected:
-	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV support
-
-
-// Implementation
 protected:
-	HICON m_hIcon;
-	CBrush m_bgBrush;
-	CFont m_titleFont;
-	HWND m_titleHwnd = nullptr;
-	afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
+    virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
 
-	afx_msg BOOL OnEraseBkgnd(CDC* pDC);
+    // Implementation
+protected:
+    HICON m_hIcon;
+    CBrush m_bgBrush;
+    CBrush m_editBrush; // Edit boxes ke liye cream brush yahan declare kiya gaya hai
+    CFont m_titleFont;
+    HWND m_titleHwnd = nullptr;
 
-	// Generated message map functions
-	virtual BOOL OnInitDialog();
-	afx_msg void OnSysCommand(UINT nID, LPARAM lParam);
-	afx_msg void OnPaint();
-	afx_msg HCURSOR OnQueryDragIcon();
-	DECLARE_MESSAGE_MAP()
+    afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
+    afx_msg BOOL OnEraseBkgnd(CDC* pDC);
+
+    // Generated message map functions
+    virtual BOOL OnInitDialog();
+    afx_msg void OnSysCommand(UINT nID, LPARAM lParam);
+    afx_msg void OnPaint();
+    afx_msg HCURSOR OnQueryDragIcon();
+    DECLARE_MESSAGE_MAP()
+
 public:
-	CString m_username;
-	CString m_password;
-	afx_msg void OnBnClickedBtnLogin();
+    CString m_username;
+    CString m_password;
+    afx_msg void OnBnClickedBtnLogin();
 };

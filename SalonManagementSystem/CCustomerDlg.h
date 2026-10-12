@@ -1,51 +1,55 @@
 #pragma once
-#include "afxdialogex.h"
-#include "Theme.h"
 
-// CCustomerDlg dialog
+#include "Theme.h"
+#include "afxdialogex.h"
+#include <string>
 
 class CCustomerDlg : public CDialogEx
 {
-	DECLARE_DYNAMIC(CCustomerDlg)
+    DECLARE_DYNAMIC(CCustomerDlg)
 
 public:
-	CCustomerDlg(CWnd* pParent = nullptr);
-	virtual ~CCustomerDlg();
+    CCustomerDlg(CWnd* pParent = nullptr);
+    virtual ~CCustomerDlg();
 
 #ifdef AFX_DESIGN_TIME
-	enum { IDD = IDD_CUSTOMER_DIALOG };
+    enum { IDD = IDD_CUSTOMER_DIALOG };
 #endif
 
 protected:
-	virtual void DoDataExchange(CDataExchange* pDX);
-	virtual BOOL OnInitDialog();
+    virtual void DoDataExchange(CDataExchange* pDX);
+    virtual BOOL OnInitDialog();
 
-	DECLARE_MESSAGE_MAP()
+    afx_msg void OnBnClickedBtnCadd();
+    afx_msg void OnBnClickedBtnCupdate();
+    afx_msg void OnBnClickedBtnCdelete();
+    afx_msg void OnNMClickListCustomers(NMHDR* pNMHDR, LRESULT* pResult);
+    afx_msg void OnNMCustomdrawListCustomers(NMHDR* pNMHDR, LRESULT* pResult);
+    afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
+    afx_msg BOOL OnEraseBkgnd(CDC* pDC);
 
-public:
-	CString m_name;
-	CString m_phone;
-	CString m_email;
-	CListCtrl m_list;
-	int m_selectedId = 0;
+    DECLARE_MESSAGE_MAP()
 
-	CBrush m_bgBrush;
-	CFont m_titleFont;
-	CStatic m_title;
-	CMFCButton m_btnAdd, m_btnUpdate, m_btnDelete;
-	afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
-
-	afx_msg BOOL OnEraseBkgnd(CDC* pDC);
-
-	void LoadCustomers();
-
-	afx_msg void OnBnClickedBtnCadd();
-	afx_msg void OnBnClickedBtnCupdate();
-	afx_msg void OnBnClickedBtnCdelete();
-	afx_msg void OnNMClickListCustomers(NMHDR* pNMHDR, LRESULT* pResult);
-	afx_msg void OnEnChangeEditCemail();
+private:
+    void LoadCustomers();
 
 public:
-	CGoldButton m_goldBack;
+    CString m_name;
+    CString m_phone;
+    CString m_email;
+    int m_selectedId;
 
+    CListCtrl m_list;
+    CStatic m_title;
+
+    
+    CMFCButton m_btnAdd;
+    CMFCButton m_btnUpdate;
+    CMFCButton m_btnDelete;
+    CGoldButton m_goldBack;
+
+    CFont m_titleFont;
+    CFont m_tableFont;
+    CBrush m_bgBrush;
+    CBrush m_editBrush;
 };

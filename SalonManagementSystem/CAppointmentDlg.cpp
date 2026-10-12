@@ -53,6 +53,10 @@ void CAppointmentDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_EDIT_ADATE, m_date);
 	DDX_Text(pDX, IDC_EDIT_ATIME, m_time);
 	DDX_Control(pDX, IDC_LIST_APPTS, m_list);
+
+	DDX_Control(pDX, IDC_BTN_AADD, m_goldAdd);
+	DDX_Control(pDX, IDC_BTN_AUPDATE, m_goldUpdate);
+	DDX_Control(pDX, IDC_BTN_ADELETE, m_goldDelete);
 }
 
 BEGIN_MESSAGE_MAP(CAppointmentDlg, CDialogEx)
@@ -68,12 +72,13 @@ BOOL CAppointmentDlg::OnInitDialog()
 {
 	CDialogEx::OnInitDialog();
 
-	m_goldAdd.SubclassDlgItem(IDC_BTN_AADD, this);
-	m_goldUpdate.SubclassDlgItem(IDC_BTN_AUPDATE, this);
-	m_goldDelete.SubclassDlgItem(IDC_BTN_ADELETE, this);
+	// Gold Buttons styling
+	StyleGoldButton(m_goldAdd);
+	StyleGoldButton(m_goldUpdate);
+	StyleGoldButton(m_goldDelete);
 	m_goldBack.SubclassDlgItem(IDCANCEL, this);
 
-	m_list.SetExtendedStyle(LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES);
+	m_list.SetExtendedStyle(LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES | LVS_EX_DOUBLEBUFFER);
 	m_list.InsertColumn(0, L"ID", LVCFMT_LEFT, 40);
 	m_list.InsertColumn(1, L"Customer", LVCFMT_LEFT, 130);
 	m_list.InsertColumn(2, L"Stylist", LVCFMT_LEFT, 130);
@@ -99,9 +104,9 @@ BOOL CAppointmentDlg::OnInitDialog()
 		pChild = pChild->GetNextWindow();
 	}
 
-	m_list.SetBkColor(Theme::ListBg);
-	m_list.SetTextBkColor(Theme::ListBg);
-	m_list.SetTextColor(Theme::Text);
+	m_list.SetBkColor(RGB(255, 250, 240));
+	m_list.SetTextBkColor(RGB(255, 250, 240));
+	m_list.SetTextColor(RGB(90, 65, 45));
 
 	FillCombo(m_comboCustomer, "SELECT CustomerID, Name FROM Customer ORDER BY Name");
 	FillCombo(m_comboStylist, "SELECT StylistID, Name FROM Stylist ORDER BY Name");
@@ -388,5 +393,9 @@ BOOL CAppointmentDlg::OnEraseBkgnd(CDC* pDC)
 		mem.SelectObject(old);
 		pDC->RestoreDC(saved);
 	}
+
+	// Draw Form Panel background box
+	Theme::DrawFormPanel(this, *pDC);
+
 	return TRUE;
 }

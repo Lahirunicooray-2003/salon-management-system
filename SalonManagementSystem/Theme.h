@@ -25,7 +25,8 @@ namespace Theme
     }
 
     // background photo (next to the .exe), cropped to fill. Falls back to gradient.
-    inline void PaintImageBg(CDC& dc, const CRect& rc, LPCTSTR fileName)
+    // overlay: 0 = photo only, 255 = solid cream (a little overlay keeps the photo soft)
+    inline void PaintImageBg(CDC& dc, const CRect& rc, LPCTSTR fileName, int overlay = 0)
     {
         static std::map<CString, CImage*> cache;
 
@@ -57,6 +58,69 @@ namespace Theme
 
         dc.SetStretchBltMode(HALFTONE);
         bg->Draw(dc.GetSafeHdc(), 0, 0, rc.Width(), rc.Height(), sx, sy, sw, sh);
+
+        if (overlay > 0)
+        {
+            CDC mem;
+            mem.CreateCompatibleDC(&dc);
+            CBitmap bmp;
+            bmp.CreateCompatibleBitmap(&dc, rc.Width(), rc.Height());
+            CBitmap* old = mem.SelectObject(&bmp);
+            mem.FillSolidRect(0, 0, rc.Width(), rc.Height(), RGB(255, 251, 242));
+            BLENDFUNCTION bf = { AC_SRC_OVER, 0, (BYTE)overlay, 0 };
+            AlphaBlend(dc.GetSafeHdc(), 0, 0, rc.Width(), rc.Height(),
+                mem.GetSafeHdc(), 0, 0, rc.Width(), rc.Height(), bf);
+            mem.SelectObject(old);
+        }
+    }
+
+    // semi-transparent cream rounded card with a gold border
+    inline void DrawPanel(CDC& dc, CRect r, int alpha = 215)
+    {
+        if (r.IsRectEmpty()) return;
+
+        CRgn rgn;
+        rgn.CreateRoundRectRgn(r.left, r.top, r.right + 1, r.bottom + 1, 24, 24);
+        int saved = dc.SaveDC();
+        dc.SelectClipRgn(&rgn);
+
+        CDC mem;
+        mem.CreateCompatibleDC(&dc);
+        CBitmap bmp;
+        bmp.CreateCompatibleBitmap(&dc, r.Width(), r.Height());
+        CBitmap* old = mem.SelectObject(&bmp);
+        mem.FillSolidRect(0, 0, r.Width(), r.Height(), RGB(255, 251, 242));
+        BLENDFUNCTION bf = { AC_SRC_OVER, 0, (BYTE)alpha, 0 };
+        AlphaBlend(dc.GetSafeHdc(), r.left, r.top, r.Width(), r.Height(),
+            mem.GetSafeHdc(), 0, 0, r.Width(), r.Height(), bf);
+        mem.SelectObject(old);
+        dc.RestoreDC(saved);
+
+        CPen pen(PS_SOLID, 2, RGB(224, 196, 140));
+        CPen* op = dc.SelectObject(&pen);
+        CBrush* ob = (CBrush*)dc.SelectStockObject(NULL_BRUSH);
+        dc.RoundRect(r, CPoint(24, 24));
+        dc.SelectObject(op);
+        dc.SelectObject(ob);
+    }
+
+    // one card that wraps every visible control of the dialog
+    inline void DrawFormPanel(CWnd* wnd, CDC& dc)
+    {
+        CRect rc;
+        wnd->GetClientRect(&rc);
+        CRect u(0, 0, 0, 0);
+        for (CWnd* c = wnd->GetWindow(GW_CHILD); c != NULL; c = c->GetWindow(GW_HWNDNEXT))
+        {
+            if (!c->IsWindowVisible()) continue;
+            CRect r;
+            c->GetWindowRect(&r);
+            wnd->ScreenToClient(&r);
+            u.UnionRect(u, r);
+        }
+        u.InflateRect(24, 16);
+        u.IntersectRect(u, rc);
+        DrawPanel(dc, u);
     }
 
     // draws logo.png that sits next to the .exe

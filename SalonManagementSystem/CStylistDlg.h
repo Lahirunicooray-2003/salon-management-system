@@ -1,4 +1,5 @@
 #pragma once
+
 #include "afxdialogex.h"
 #include "Theme.h"
 
@@ -15,10 +16,10 @@ public:
 #endif
 
 public:
-	CGoldButton m_goldAdd;
-	CGoldButton m_goldUpdate;
-	CGoldButton m_goldDelete;
-	CGoldButton m_goldDetails;
+	CMFCButton m_goldAdd;
+	CMFCButton m_goldUpdate;
+	CMFCButton m_goldDelete;
+	CMFCButton m_goldDetails;
 	CGoldButton m_goldBack;
 
 protected:
@@ -38,6 +39,7 @@ public:
 	CBrush m_bgBrush;
 	CFont m_titleFont;
 	HWND m_titleHwnd = nullptr;
+
 	afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
 	afx_msg BOOL OnEraseBkgnd(CDC* pDC);
 

@@ -8,14 +8,14 @@
 
 static std::string ToUtf8(const CString& s)
 {
-	CStringA a(CW2A(s, CP_UTF8));
-	return std::string(a);
+    CStringA a(CW2A(s, CP_UTF8));
+    return std::string(a);
 }
 
 IMPLEMENT_DYNAMIC(CServiceDlg, CDialogEx)
 
 CServiceDlg::CServiceDlg(CWnd* pParent /*=nullptr*/)
-	: CDialogEx(IDD_SERVICE_DIALOG, pParent)
+    : CDialogEx(IDD_SERVICE_DIALOG, pParent)
 {
 }
 
@@ -25,225 +25,236 @@ CServiceDlg::~CServiceDlg()
 
 void CServiceDlg::DoDataExchange(CDataExchange* pDX)
 {
-	CDialogEx::DoDataExchange(pDX);
-	DDX_Control(pDX, IDC_LIST_SERVICES, m_list);
-	DDX_Text(pDX, IDC_EDIT_SNAME, m_name);
-	DDX_Text(pDX, IDC_EDIT_SPRICE, m_price);
-	DDX_Text(pDX, IDC_EDIT_SDURATION, m_duration);
+    CDialogEx::DoDataExchange(pDX);
+    DDX_Control(pDX, IDC_LIST_SERVICES, m_list);
+    DDX_Text(pDX, IDC_EDIT_SNAME, m_name);
+    DDX_Text(pDX, IDC_EDIT_SPRICE, m_price);
+    DDX_Text(pDX, IDC_EDIT_SDURATION, m_duration);
+
+    DDX_Control(pDX, IDC_BTN_SADD, m_btnAdd);
+    DDX_Control(pDX, IDC_BTN_SUPDATE, m_btnUpdate);
+    DDX_Control(pDX, IDC_BTN_SDELETE, m_btnDelete);
 }
 
 BEGIN_MESSAGE_MAP(CServiceDlg, CDialogEx)
-	ON_BN_CLICKED(IDC_BTN_SADD, &CServiceDlg::OnBnClickedBtnSadd)
-	ON_BN_CLICKED(IDC_BTN_SUPDATE, &CServiceDlg::OnBnClickedBtnSupdate)
-	ON_BN_CLICKED(IDC_BTN_SDELETE, &CServiceDlg::OnBnClickedBtnSdelete)
-	ON_NOTIFY(NM_CLICK, IDC_LIST_SERVICES, &CServiceDlg::OnNMClickListServices)
-	ON_WM_CTLCOLOR()
-	ON_WM_ERASEBKGND()
+    ON_BN_CLICKED(IDC_BTN_SADD, &CServiceDlg::OnBnClickedBtnSadd)
+    ON_BN_CLICKED(IDC_BTN_SUPDATE, &CServiceDlg::OnBnClickedBtnSupdate)
+    ON_BN_CLICKED(IDC_BTN_SDELETE, &CServiceDlg::OnBnClickedBtnSdelete)
+    ON_NOTIFY(NM_CLICK, IDC_LIST_SERVICES, &CServiceDlg::OnNMClickListServices)
+    ON_WM_CTLCOLOR()
+    ON_WM_ERASEBKGND()
 END_MESSAGE_MAP()
 
 BOOL CServiceDlg::OnInitDialog()
 {
-	CDialogEx::OnInitDialog();
+    CDialogEx::OnInitDialog();
 
-	m_goldAdd.SubclassDlgItem(IDC_BTN_SADD, this);
-	m_goldUpdate.SubclassDlgItem(IDC_BTN_SUPDATE, this);
-	m_goldDelete.SubclassDlgItem(IDC_BTN_SDELETE, this);
-	m_goldBack.SubclassDlgItem(IDCANCEL, this);
+    // Style Gold Buttons for Add, Update, Delete
+    StyleGoldButton(m_btnAdd);
+    StyleGoldButton(m_btnUpdate);
+    StyleGoldButton(m_btnDelete);
 
-	m_list.SetExtendedStyle(LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES);
-	m_list.InsertColumn(0, L"ID", LVCFMT_LEFT, 50);
-	m_list.InsertColumn(1, L"Service", LVCFMT_LEFT, 170);
-	m_list.InsertColumn(2, L"Price (Rs.)", LVCFMT_LEFT, 100);
-	m_list.InsertColumn(3, L"Duration (min)", LVCFMT_LEFT, 110);
+    // Back button subclassing
+    m_goldBack.SubclassDlgItem(IDCANCEL, this);
 
-	m_bgBrush.CreateSolidBrush(Theme::Bg);
-	m_titleFont.CreatePointFont(180, L"Segoe UI Semibold");
+    m_list.SetExtendedStyle(LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES | LVS_EX_DOUBLEBUFFER);
+    m_list.InsertColumn(0, L"ID", LVCFMT_LEFT, 50);
+    m_list.InsertColumn(1, L"Service", LVCFMT_LEFT, 170);
+    m_list.InsertColumn(2, L"Price (Rs.)", LVCFMT_LEFT, 100);
+    m_list.InsertColumn(3, L"Duration (min)", LVCFMT_LEFT, 110);
 
-	CWnd* pChild = GetWindow(GW_CHILD);
-	while (pChild)
-	{
-		CString txt;
-		pChild->GetWindowText(txt);
-		if (txt == L"Service Management")
-		{
-			pChild->SetFont(&m_titleFont);
-			m_titleHwnd = pChild->GetSafeHwnd();
-			break;
-		}
-		pChild = pChild->GetNextWindow();
-	}
+    m_bgBrush.CreateSolidBrush(Theme::Bg);
+    m_titleFont.CreatePointFont(180, L"Segoe UI Semibold");
 
-	m_list.SetBkColor(Theme::ListBg);
-	m_list.SetTextBkColor(Theme::ListBg);
-	m_list.SetTextColor(Theme::Text);
+    CWnd* pChild = GetWindow(GW_CHILD);
+    while (pChild)
+    {
+        CString txt;
+        pChild->GetWindowText(txt);
+        if (txt == L"Service Management")
+        {
+            pChild->SetFont(&m_titleFont);
+            m_titleHwnd = pChild->GetSafeHwnd();
+            break;
+        }
+        pChild = pChild->GetNextWindow();
+    }
 
-	LoadServices();
-	return TRUE;
+    m_list.SetBkColor(RGB(255, 250, 240));
+    m_list.SetTextBkColor(RGB(255, 250, 240));
+    m_list.SetTextColor(RGB(90, 65, 45));
+
+    LoadServices();
+    return TRUE;
 }
 
 void CServiceDlg::LoadServices()
 {
-	m_list.DeleteAllItems();
+    m_list.DeleteAllItems();
 
-	DBConnection db;
-	if (!db.Open()) { AfxMessageBox(L"Unable to connect to the database.", MB_ICONERROR); return; }
+    DBConnection db;
+    if (!db.Open()) { AfxMessageBox(L"Unable to connect to the database.", MB_ICONERROR); return; }
 
-	MYSQL_RES* res = db.Query("SELECT ServiceID, ServiceName, Price, Duration FROM Service");
-	if (!res) return;
+    MYSQL_RES* res = db.Query("SELECT ServiceID, ServiceName, Price, Duration FROM Service");
+    if (!res) return;
 
-	MYSQL_ROW row;
-	int i = 0;
-	while ((row = mysql_fetch_row(res)))
-	{
-		m_list.InsertItem(i, CString(CA2W(row[0] ? row[0] : "", CP_UTF8)));
-		m_list.SetItemText(i, 1, CString(CA2W(row[1] ? row[1] : "", CP_UTF8)));
-		m_list.SetItemText(i, 2, CString(CA2W(row[2] ? row[2] : "", CP_UTF8)));
-		m_list.SetItemText(i, 3, CString(CA2W(row[3] ? row[3] : "", CP_UTF8)));
-		i++;
-	}
-	mysql_free_result(res);
+    MYSQL_ROW row;
+    int i = 0;
+    while ((row = mysql_fetch_row(res)))
+    {
+        m_list.InsertItem(i, CString(CA2W(row[0] ? row[0] : "", CP_UTF8)));
+        m_list.SetItemText(i, 1, CString(CA2W(row[1] ? row[1] : "", CP_UTF8)));
+        m_list.SetItemText(i, 2, CString(CA2W(row[2] ? row[2] : "", CP_UTF8)));
+        m_list.SetItemText(i, 3, CString(CA2W(row[3] ? row[3] : "", CP_UTF8)));
+        i++;
+    }
+    mysql_free_result(res);
 
-	int cols = m_list.GetHeaderCtrl()->GetItemCount();
-	m_list.SetColumnWidth(0, 60);                                  // ID
-	for (int c = 1; c < cols; c++)
-		m_list.SetColumnWidth(c, LVSCW_AUTOSIZE_USEHEADER);        // other columns fit content
+    int cols = m_list.GetHeaderCtrl()->GetItemCount();
+    m_list.SetColumnWidth(0, 60);
+    for (int c = 1; c < cols; c++)
+        m_list.SetColumnWidth(c, LVSCW_AUTOSIZE_USEHEADER);
 }
 
 void CServiceDlg::OnBnClickedBtnSadd()
 {
-	UpdateData(TRUE);
-	double price = _tstof(m_price);
-	int duration = _ttoi(m_duration);
-	if (m_name.IsEmpty() || price <= 0 || duration <= 0)
-	{
-		AfxMessageBox(L"Enter a service name, a valid price, and a duration in minutes.", MB_ICONWARNING);
-		return;
-	}
+    UpdateData(TRUE);
+    double price = _tstof(m_price);
+    int duration = _ttoi(m_duration);
+    if (m_name.IsEmpty() || price <= 0 || duration <= 0)
+    {
+        AfxMessageBox(L"Enter a service name, a valid price, and a duration in minutes.", MB_ICONWARNING);
+        return;
+    }
 
-	DBConnection db;
-	if (!db.Open()) { AfxMessageBox(L"Unable to connect to the database.", MB_ICONERROR); return; }
+    DBConnection db;
+    if (!db.Open()) { AfxMessageBox(L"Unable to connect to the database.", MB_ICONERROR); return; }
 
-	std::string sql = "INSERT INTO Service (ServiceName, Price, Duration) VALUES ('"
-		+ db.Escape(ToUtf8(m_name)) + "',"
-		+ std::to_string(price) + ","
-		+ std::to_string(duration) + ")";
+    std::string sql = "INSERT INTO Service (ServiceName, Price, Duration) VALUES ('"
+        + db.Escape(ToUtf8(m_name)) + "',"
+        + std::to_string(price) + ","
+        + std::to_string(duration) + ")";
 
-	if (db.Execute(sql)) AfxMessageBox(L"Service added successfully.", MB_ICONINFORMATION);
-	else AfxMessageBox(L"Failed to add the service.", MB_ICONERROR);
+    if (db.Execute(sql)) AfxMessageBox(L"Service added successfully.", MB_ICONINFORMATION);
+    else AfxMessageBox(L"Failed to add the service.", MB_ICONERROR);
 
-	m_name = m_price = m_duration = L"";
-	UpdateData(FALSE);
-	LoadServices();
+    m_name = m_price = m_duration = L"";
+    UpdateData(FALSE);
+    LoadServices();
 }
 
 void CServiceDlg::OnBnClickedBtnSupdate()
 {
-	UpdateData(TRUE);
-	if (m_selectedId == 0) { AfxMessageBox(L"Please select a service from the list.", MB_ICONWARNING); return; }
+    UpdateData(TRUE);
+    if (m_selectedId == 0) { AfxMessageBox(L"Please select a service from the list.", MB_ICONWARNING); return; }
 
-	double price = _tstof(m_price);
-	int duration = _ttoi(m_duration);
-	if (m_name.IsEmpty() || price <= 0 || duration <= 0)
-	{
-		AfxMessageBox(L"Enter a service name, a valid price, and a duration in minutes.", MB_ICONWARNING);
-		return;
-	}
+    double price = _tstof(m_price);
+    int duration = _ttoi(m_duration);
+    if (m_name.IsEmpty() || price <= 0 || duration <= 0)
+    {
+        AfxMessageBox(L"Enter a service name, a valid price, and a duration in minutes.", MB_ICONWARNING);
+        return;
+    }
 
-	DBConnection db;
-	if (!db.Open()) { AfxMessageBox(L"Unable to connect to the database.", MB_ICONERROR); return; }
+    DBConnection db;
+    if (!db.Open()) { AfxMessageBox(L"Unable to connect to the database.", MB_ICONERROR); return; }
 
-	std::string sql = "UPDATE Service SET ServiceName='" + db.Escape(ToUtf8(m_name))
-		+ "', Price=" + std::to_string(price)
-		+ ", Duration=" + std::to_string(duration)
-		+ " WHERE ServiceID=" + std::to_string(m_selectedId);
+    std::string sql = "UPDATE Service SET ServiceName='" + db.Escape(ToUtf8(m_name))
+        + "', Price=" + std::to_string(price)
+        + ", Duration=" + std::to_string(duration)
+        + " WHERE ServiceID=" + std::to_string(m_selectedId);
 
-	if (db.Execute(sql)) AfxMessageBox(L"Service updated successfully.", MB_ICONINFORMATION);
-	else AfxMessageBox(L"Failed to update the service.", MB_ICONERROR);
-	LoadServices();
+    if (db.Execute(sql)) AfxMessageBox(L"Service updated successfully.", MB_ICONINFORMATION);
+    else AfxMessageBox(L"Failed to update the service.", MB_ICONERROR);
+    LoadServices();
 }
 
 void CServiceDlg::OnBnClickedBtnSdelete()
 {
-	if (m_selectedId == 0) { AfxMessageBox(L"Please select a service from the list.", MB_ICONWARNING); return; }
-	if (AfxMessageBox(L"Are you sure you want to delete this service?", MB_YESNO | MB_ICONQUESTION) != IDYES) return;
+    if (m_selectedId == 0) { AfxMessageBox(L"Please select a service from the list.", MB_ICONWARNING); return; }
+    if (AfxMessageBox(L"Are you sure you want to delete this service?", MB_YESNO | MB_ICONQUESTION) != IDYES) return;
 
-	DBConnection db;
-	if (!db.Open()) { AfxMessageBox(L"Unable to connect to the database.", MB_ICONERROR); return; }
+    DBConnection db;
+    if (!db.Open()) { AfxMessageBox(L"Unable to connect to the database.", MB_ICONERROR); return; }
 
-	if (db.Execute("DELETE FROM Service WHERE ServiceID=" + std::to_string(m_selectedId)))
-		AfxMessageBox(L"Service deleted successfully.", MB_ICONINFORMATION);
-	else
-		AfxMessageBox(L"Failed to delete the service.", MB_ICONERROR);
+    if (db.Execute("DELETE FROM Service WHERE ServiceID=" + std::to_string(m_selectedId)))
+        AfxMessageBox(L"Service deleted successfully.", MB_ICONINFORMATION);
+    else
+        AfxMessageBox(L"Failed to delete the service.", MB_ICONERROR);
 
-	m_selectedId = 0;
-	m_name = m_price = m_duration = L"";
-	UpdateData(FALSE);
-	LoadServices();
+    m_selectedId = 0;
+    m_name = m_price = m_duration = L"";
+    UpdateData(FALSE);
+    LoadServices();
 }
 
 void CServiceDlg::OnNMClickListServices(NMHDR* pNMHDR, LRESULT* pResult)
 {
-	LPNMITEMACTIVATE p = reinterpret_cast<LPNMITEMACTIVATE>(pNMHDR);
-	if (p->iItem >= 0)
-	{
-		m_selectedId = _ttoi(m_list.GetItemText(p->iItem, 0));
-		m_name = m_list.GetItemText(p->iItem, 1);
-		m_price = m_list.GetItemText(p->iItem, 2);
-		m_duration = m_list.GetItemText(p->iItem, 3);
-		UpdateData(FALSE);
-	}
-	*pResult = 0;
+    LPNMITEMACTIVATE p = reinterpret_cast<LPNMITEMACTIVATE>(pNMHDR);
+    if (p->iItem >= 0)
+    {
+        m_selectedId = _ttoi(m_list.GetItemText(p->iItem, 0));
+        m_name = m_list.GetItemText(p->iItem, 1);
+        m_price = m_list.GetItemText(p->iItem, 2);
+        m_duration = m_list.GetItemText(p->iItem, 3);
+        UpdateData(FALSE);
+    }
+    *pResult = 0;
 }
 
 HBRUSH CServiceDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
 {
-	if (nCtlColor == CTLCOLOR_STATIC)
-	{
-		pDC->SetBkMode(TRANSPARENT);
-		pDC->SetTextColor(RGB(110, 72, 20));
-		return (HBRUSH)GetStockObject(NULL_BRUSH);
-	}
-	return CDialogEx::OnCtlColor(pDC, pWnd, nCtlColor);
+    if (nCtlColor == CTLCOLOR_STATIC)
+    {
+        pDC->SetBkMode(TRANSPARENT);
+        pDC->SetTextColor(RGB(110, 72, 20));
+        return (HBRUSH)GetStockObject(NULL_BRUSH);
+    }
+    return CDialogEx::OnCtlColor(pDC, pWnd, nCtlColor);
 }
 
 BOOL CServiceDlg::OnEraseBkgnd(CDC* pDC)
 {
-	CRect rc;
-	GetClientRect(&rc);
-	Theme::PaintImageBg(*pDC, rc, _T("servicesbg.jpg"));
+    CRect rc;
+    GetClientRect(&rc);
+    Theme::PaintImageBg(*pDC, rc, _T("servicesbg.jpg"));
 
-	// semi-transparent cream plate behind every label and the title
-	for (CWnd* c = GetWindow(GW_CHILD); c != NULL; c = c->GetWindow(GW_HWNDNEXT))
-	{
-		if (!c->IsWindowVisible()) continue;
+    // semi-transparent cream plate behind every label and the title
+    for (CWnd* c = GetWindow(GW_CHILD); c != NULL; c = c->GetWindow(GW_HWNDNEXT))
+    {
+        if (!c->IsWindowVisible()) continue;
 
-		TCHAR cls[32] = { 0 };
-		GetClassName(c->GetSafeHwnd(), cls, 31);
-		if (_tcsicmp(cls, _T("Static")) != 0) continue;   // only labels / title
+        TCHAR cls[32] = { 0 };
+        GetClassName(c->GetSafeHwnd(), cls, 31);
+        if (_tcsicmp(cls, _T("Static")) != 0) continue;
 
-		CRect r;
-		c->GetWindowRect(&r);
-		ScreenToClient(&r);
-		r.InflateRect(8, 3);
-		r.IntersectRect(r, rc);
-		if (r.Width() <= 0 || r.Height() <= 0) continue;
+        CRect r;
+        c->GetWindowRect(&r);
+        ScreenToClient(&r);
+        r.InflateRect(8, 3);
+        r.IntersectRect(r, rc);
+        if (r.Width() <= 0 || r.Height() <= 0) continue;
 
-		CRgn rgn;
-		rgn.CreateRoundRectRgn(r.left, r.top, r.right + 1, r.bottom + 1, 14, 14);
-		int saved = pDC->SaveDC();
-		pDC->SelectClipRgn(&rgn);
+        CRgn rgn;
+        rgn.CreateRoundRectRgn(r.left, r.top, r.right + 1, r.bottom + 1, 14, 14);
+        int saved = pDC->SaveDC();
+        pDC->SelectClipRgn(&rgn);
 
-		CDC mem;
-		mem.CreateCompatibleDC(pDC);
-		CBitmap bmp;
-		bmp.CreateCompatibleBitmap(pDC, r.Width(), r.Height());
-		CBitmap* old = mem.SelectObject(&bmp);
-		mem.FillSolidRect(0, 0, r.Width(), r.Height(), RGB(255, 251, 242));
-		BLENDFUNCTION bf = { AC_SRC_OVER, 0, 215, 0 };
-		AlphaBlend(pDC->GetSafeHdc(), r.left, r.top, r.Width(), r.Height(),
-			mem.GetSafeHdc(), 0, 0, r.Width(), r.Height(), bf);
-		mem.SelectObject(old);
-		pDC->RestoreDC(saved);
-	}
-	return TRUE;
+        CDC mem;
+        mem.CreateCompatibleDC(pDC);
+        CBitmap bmp;
+        bmp.CreateCompatibleBitmap(pDC, r.Width(), r.Height());
+        CBitmap* old = mem.SelectObject(&bmp);
+        mem.FillSolidRect(0, 0, r.Width(), r.Height(), RGB(255, 251, 242));
+        BLENDFUNCTION bf = { AC_SRC_OVER, 0, 215, 0 };
+        AlphaBlend(pDC->GetSafeHdc(), r.left, r.top, r.Width(), r.Height(),
+            mem.GetSafeHdc(), 0, 0, r.Width(), r.Height(), bf);
+        mem.SelectObject(old);
+        pDC->RestoreDC(saved);
+    }
+
+    // Main Form Panel
+    Theme::DrawFormPanel(this, *pDC);
+
+    return TRUE;
 }

@@ -38,6 +38,11 @@ void CStylistDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_EDIT_TEMAIL, m_email);
 	DDX_Text(pDX, IDC_EDIT_TSPEC, m_spec);
 	DDX_Control(pDX, IDC_LIST_STYLISTS, m_list);
+
+	DDX_Control(pDX, IDC_BTN_TADD, m_goldAdd);
+	DDX_Control(pDX, IDC_BTN_TUPDATE, m_goldUpdate);
+	DDX_Control(pDX, IDC_BTN_TDELETE, m_goldDelete);
+	DDX_Control(pDX, IDC_BTN_TDETAILS, m_goldDetails);
 }
 
 BEGIN_MESSAGE_MAP(CStylistDlg, CDialogEx)
@@ -57,13 +62,14 @@ BOOL CStylistDlg::OnInitDialog()
 {
 	CDialogEx::OnInitDialog();
 
-	m_goldAdd.SubclassDlgItem(IDC_BTN_TADD, this);
-	m_goldUpdate.SubclassDlgItem(IDC_BTN_TUPDATE, this);
-	m_goldDelete.SubclassDlgItem(IDC_BTN_TDELETE, this);
-	m_goldDetails.SubclassDlgItem(IDC_BTN_TDETAILS, this);
+	// Gold Buttons styling
+	StyleGoldButton(m_goldAdd);
+	StyleGoldButton(m_goldUpdate);
+	StyleGoldButton(m_goldDelete);
+	StyleGoldButton(m_goldDetails);
 	m_goldBack.SubclassDlgItem(IDCANCEL, this);
 
-	m_list.SetExtendedStyle(LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES);
+	m_list.SetExtendedStyle(LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES | LVS_EX_DOUBLEBUFFER);
 	m_list.InsertColumn(0, L"ID", LVCFMT_LEFT, 40);
 	m_list.InsertColumn(1, L"Name", LVCFMT_LEFT, 120);
 	m_list.InsertColumn(2, L"Phone", LVCFMT_LEFT, 100);
@@ -87,9 +93,9 @@ BOOL CStylistDlg::OnInitDialog()
 		pChild = pChild->GetNextWindow();
 	}
 
-	m_list.SetBkColor(Theme::ListBg);
-	m_list.SetTextBkColor(Theme::ListBg);
-	m_list.SetTextColor(Theme::Text);
+	m_list.SetBkColor(RGB(255, 250, 240));
+	m_list.SetTextBkColor(RGB(255, 250, 240));
+	m_list.SetTextColor(RGB(90, 65, 45));
 
 	LoadStylists();
 	return TRUE;
@@ -117,9 +123,9 @@ void CStylistDlg::LoadStylists()
 	mysql_free_result(res);
 
 	int cols = m_list.GetHeaderCtrl()->GetItemCount();
-	m_list.SetColumnWidth(0, 60);                                  // ID
+	m_list.SetColumnWidth(0, 60);
 	for (int c = 1; c < cols; c++)
-		m_list.SetColumnWidth(c, LVSCW_AUTOSIZE_USEHEADER);        // other columns fit content
+		m_list.SetColumnWidth(c, LVSCW_AUTOSIZE_USEHEADER);
 }
 
 void CStylistDlg::OnBnClickedBtnTadd()
@@ -207,7 +213,6 @@ void CStylistDlg::OnBnClickedBtnTdetails()
 
 	try
 	{
-		// POLYMORPHISM: a Person pointer calls the Stylist version of getDetails()
 		std::unique_ptr<Person> p = std::make_unique<Stylist>(
 			ToUtf8(m_name), ToUtf8(m_phone), ToUtf8(m_email), ToUtf8(m_spec));
 		AfxMessageBox(FromUtf8(p->getDetails()), MB_ICONINFORMATION);
@@ -232,31 +237,19 @@ void CStylistDlg::OnNMClickListStylists(NMHDR* pNMHDR, LRESULT* pResult)
 	}
 	*pResult = 0;
 }
+
 void CStylistDlg::OnLvnItemchangedListStylists(NMHDR* pNMHDR, LRESULT* pResult)
 {
 	LPNMLISTVIEW pNMLV = reinterpret_cast<LPNMLISTVIEW>(pNMHDR);
-	// TODO: Add your control notification handler code here
 	*pResult = 0;
 }
 
 void CStylistDlg::OnEnChangeEditTemail()
 {
-	// TODO:  If this is a RICHEDIT control, the control will not
-	// send this notification unless you override the CDialogEx::OnInitDialog()
-	// function and call CRichEditCtrl().SetEventMask()
-	// with the ENM_CHANGE flag ORed into the mask.
-
-	// TODO:  Add your control notification handler code here
 }
 
 void CStylistDlg::OnEnChangeEditTname()
 {
-	// TODO:  If this is a RICHEDIT control, the control will not
-	// send this notification unless you override the CDialogEx::OnInitDialog()
-	// function and call CRichEditCtrl().SetEventMask()
-	// with the ENM_CHANGE flag ORed into the mask.
-
-	// TODO:  Add your control notification handler code here
 }
 
 HBRUSH CStylistDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
@@ -283,7 +276,7 @@ BOOL CStylistDlg::OnEraseBkgnd(CDC* pDC)
 
 		TCHAR cls[32] = { 0 };
 		GetClassName(c->GetSafeHwnd(), cls, 31);
-		if (_tcsicmp(cls, _T("Static")) != 0) continue;   // only labels / title
+		if (_tcsicmp(cls, _T("Static")) != 0) continue;
 
 		CRect r;
 		c->GetWindowRect(&r);
@@ -309,5 +302,9 @@ BOOL CStylistDlg::OnEraseBkgnd(CDC* pDC)
 		mem.SelectObject(old);
 		pDC->RestoreDC(saved);
 	}
+
+	// Main Form Panel
+	Theme::DrawFormPanel(this, *pDC);
+
 	return TRUE;
 }
