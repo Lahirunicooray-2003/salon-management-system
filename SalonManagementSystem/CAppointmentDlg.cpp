@@ -67,6 +67,11 @@ BOOL CAppointmentDlg::OnInitDialog()
 {
 	CDialogEx::OnInitDialog();
 
+	m_goldAdd.SubclassDlgItem(IDC_BTN_AADD, this);
+	m_goldUpdate.SubclassDlgItem(IDC_BTN_AUPDATE, this);
+	m_goldDelete.SubclassDlgItem(IDC_BTN_ADELETE, this);
+	m_goldBack.SubclassDlgItem(IDCANCEL, this);
+
 	m_list.SetExtendedStyle(LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES);
 	m_list.InsertColumn(0, L"ID", LVCFMT_LEFT, 40);
 	m_list.InsertColumn(1, L"Customer", LVCFMT_LEFT, 130);

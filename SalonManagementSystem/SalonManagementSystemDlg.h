@@ -11,6 +11,8 @@ class CSalonManagementSystemDlg : public CDialogEx
 {
 // Construction
 public:
+	CGoldButton m_goldLogin;
+
 	CSalonManagementSystemDlg(CWnd* pParent = nullptr);	// standard constructor
 
 // Dialog Data

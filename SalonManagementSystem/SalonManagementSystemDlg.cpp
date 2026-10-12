@@ -89,6 +89,8 @@ BOOL CSalonManagementSystemDlg::OnInitDialog()
 {
 	CDialogEx::OnInitDialog();
 
+	m_goldLogin.SubclassDlgItem(IDC_BTN_LOGIN, this);
+
 	// Add "About..." menu item to system menu.
 
 	// IDM_ABOUTBOX must be in the system command range.

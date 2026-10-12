@@ -1,4 +1,5 @@
 #pragma once
+#include "Theme.h"  
 #include "afxdialogex.h"
 #include <string>
 
@@ -13,6 +14,11 @@ public:
 #ifdef AFX_DESIGN_TIME
 	enum { IDD = IDD_APPOINTMENT_DIALOG };
 #endif
+public:
+	CGoldButton m_goldAdd;
+	CGoldButton m_goldUpdate;
+	CGoldButton m_goldDelete;
+	CGoldButton m_goldBack;
 
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);

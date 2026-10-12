@@ -1,5 +1,6 @@
 #pragma once
 #include "afxdialogex.h"
+#include "Theme.h"
 
 class CServiceDlg : public CDialogEx
 {
@@ -12,6 +13,12 @@ public:
 #ifdef AFX_DESIGN_TIME
 	enum { IDD = IDD_SERVICE_DIALOG };
 #endif
+
+public:
+	CGoldButton m_goldAdd;
+	CGoldButton m_goldUpdate;
+	CGoldButton m_goldDelete;
+	CGoldButton m_goldBack;
 
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);

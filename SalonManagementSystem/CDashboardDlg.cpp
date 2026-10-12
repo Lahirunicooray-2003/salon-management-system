@@ -28,7 +28,7 @@ CDashboardDlg::~CDashboardDlg()
 void CDashboardDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
-	DDX_Control(pDX, IDC_STATIC_DTITLE, m_title);
+
 
  
 }
@@ -51,8 +51,18 @@ BOOL CDashboardDlg::OnInitDialog()
     CDialogEx::OnInitDialog();
 
     m_titleFont.CreatePointFont(160, L"Segoe UI Semibold");
-    m_title.SetFont(&m_titleFont);
+
+    CWnd* pTitle = GetDlgItem(IDC_STATIC_DTITLE);
+    if (pTitle != nullptr)
+        pTitle->SetFont(&m_titleFont);
+
     m_bgBrush.CreateSolidBrush(Theme::Bg);
+
+    m_goldCustomers.SubclassDlgItem(IDC_BTN_CUSTOMERS, this);
+    m_goldServices.SubclassDlgItem(IDC_BTN_SERVICES, this);
+    m_goldStylists.SubclassDlgItem(IDC_BTN_STYLISTS, this);
+    m_goldAppointments.SubclassDlgItem(IDC_BTN_APPOINTMENTS, this);
+    m_goldLogout.SubclassDlgItem(IDC_BTN_LOGOUT, this);
 
     return TRUE;
 }

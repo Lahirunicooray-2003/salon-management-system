@@ -56,6 +56,7 @@
 #define IDC_BTN_AUPDATE                 1054
 #define IDC_BTN_ADELETE                 1055
 #define IDC_LIST_APPTS                  1056
+#define IDC_BUTTON5                     1065
 #define IDD_CUSTOMER_DIALOG             32771
 
 // Next default values for new objects
@@ -64,7 +65,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        146
 #define _APS_NEXT_COMMAND_VALUE         32773
-#define _APS_NEXT_CONTROL_VALUE         1061
+#define _APS_NEXT_CONTROL_VALUE         1066
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

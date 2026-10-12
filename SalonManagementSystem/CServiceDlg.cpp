@@ -26,10 +26,10 @@ CServiceDlg::~CServiceDlg()
 void CServiceDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
+	DDX_Control(pDX, IDC_LIST_SERVICES, m_list);
 	DDX_Text(pDX, IDC_EDIT_SNAME, m_name);
 	DDX_Text(pDX, IDC_EDIT_SPRICE, m_price);
-	DDX_Text(pDX, IDC_EDIT_SDURATION, m_duration);
-	DDX_Control(pDX, IDC_LIST_SERVICES, m_list);
+
 }
 
 BEGIN_MESSAGE_MAP(CServiceDlg, CDialogEx)
@@ -43,6 +43,11 @@ END_MESSAGE_MAP()
 BOOL CServiceDlg::OnInitDialog()
 {
 	CDialogEx::OnInitDialog();
+
+	m_goldAdd.SubclassDlgItem(IDC_BTN_SADD, this);
+	m_goldUpdate.SubclassDlgItem(IDC_BTN_SUPDATE, this);
+	m_goldDelete.SubclassDlgItem(IDC_BTN_SDELETE, this);
+	m_goldBack.SubclassDlgItem(IDCANCEL, this);
 
 	m_list.SetExtendedStyle(LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES);
 	m_list.InsertColumn(0, L"ID", LVCFMT_LEFT, 50);
