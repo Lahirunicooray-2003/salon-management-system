@@ -35,6 +35,8 @@ public:
 	CMFCButton m_btnAdd, m_btnUpdate, m_btnDelete;
 	afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
 
+	afx_msg BOOL OnEraseBkgnd(CDC* pDC);
+
 	void LoadCustomers();
 
 	afx_msg void OnBnClickedBtnCadd();
@@ -42,4 +44,8 @@ public:
 	afx_msg void OnBnClickedBtnCdelete();
 	afx_msg void OnNMClickListCustomers(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnEnChangeEditCemail();
+
+public:
+	CGoldButton m_goldBack;
+
 };

@@ -32,6 +32,8 @@ protected:
 	HWND m_titleHwnd = nullptr;
 	afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
 
+	afx_msg BOOL OnEraseBkgnd(CDC* pDC);
+
 	// Generated message map functions
 	virtual BOOL OnInitDialog();
 	afx_msg void OnSysCommand(UINT nID, LPARAM lParam);

@@ -244,7 +244,9 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\..\salon_aura_logo.png" />
+    <Image Include="..\x64\Debug\logo.png.png" />
     <Image Include="res\SalonManagementSystem.ico" />
+    <Image Include="x64\Debug\logo.png" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

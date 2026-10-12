@@ -116,5 +116,11 @@
     <Image Include="..\..\salon_aura_logo.png">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="x64\Debug\logo.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\x64\Debug\logo.png.png">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
 </Project>

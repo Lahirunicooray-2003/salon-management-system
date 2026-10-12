@@ -80,6 +80,7 @@ BEGIN_MESSAGE_MAP(CSalonManagementSystemDlg, CDialogEx)
 	ON_WM_QUERYDRAGICON()
 	ON_BN_CLICKED(IDC_BTN_LOGIN, &CSalonManagementSystemDlg::OnBnClickedBtnLogin)
 	ON_WM_CTLCOLOR()
+	ON_WM_ERASEBKGND()
 END_MESSAGE_MAP()
 
 
@@ -233,14 +234,37 @@ HBRUSH CSalonManagementSystemDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColo
 {
 	HBRUSH hbr = CDialogEx::OnCtlColor(pDC, pWnd, nCtlColor);
 
-	if (nCtlColor == CTLCOLOR_DLG || nCtlColor == CTLCOLOR_STATIC)
+	if (nCtlColor == CTLCOLOR_STATIC)
 	{
 		pDC->SetBkMode(TRANSPARENT);
-		if (pWnd->GetSafeHwnd() == m_titleHwnd)
-			pDC->SetTextColor(Theme::GoldDark);
-		else
-			pDC->SetTextColor(Theme::Text);
-		return (HBRUSH)m_bgBrush.GetSafeHandle();
+
+		// keep your existing title text colour lines here
+
+		return (HBRUSH)GetStockObject(NULL_BRUSH);
 	}
 	return hbr;
+}
+
+BOOL CSalonManagementSystemDlg::OnEraseBkgnd(CDC* pDC)
+{
+	CRect rc;
+	GetClientRect(rc);
+	Theme::PaintGradient(*pDC, rc);
+
+	// logo: as big as the space above the Username box allows
+	int availH = 250;                                   // fallback
+	CWnd* pUser = GetDlgItem(IDC_EDIT_USERNAME);
+	if (pUser != nullptr)
+	{
+		CRect ur;
+		pUser->GetWindowRect(ur);
+		ScreenToClient(ur);
+		availH = ur.top - 30;                           // leave a small gap
+	}
+
+	int h = availH;
+	int w = h * 420 / 300;                              // keep logo proportions
+	CRect logo((rc.Width() - w) / 2, 10, (rc.Width() + w) / 2, 10 + h);
+	Theme::DrawLogo(*pDC, logo);
+	return TRUE;
 }

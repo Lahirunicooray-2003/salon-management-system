@@ -20,6 +20,9 @@ protected:
 	virtual BOOL OnInitDialog();
 	CFont m_titleFont;
 	CBrush m_bgBrush;
+
+	afx_msg BOOL OnEraseBkgnd(CDC* pDC);
+
 	DECLARE_MESSAGE_MAP()
 public:
 	CStatic m_title;

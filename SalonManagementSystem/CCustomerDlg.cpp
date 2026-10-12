@@ -8,6 +8,7 @@
 #include "DBConnection.h"
 #include "Customer.h"
 #include <string>
+#include "Theme.h"
 
 // CString (wide) -> std::string (UTF-8)
 static std::string ToUtf8(const CString& s)
@@ -47,12 +48,15 @@ BEGIN_MESSAGE_MAP(CCustomerDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BTN_CDELETE, &CCustomerDlg::OnBnClickedBtnCdelete)
 	ON_NOTIFY(NM_CLICK, IDC_LIST_CUSTOMERS, &CCustomerDlg::OnNMClickListCustomers)
 	ON_WM_CTLCOLOR()
+	ON_WM_ERASEBKGND()
 	ON_EN_CHANGE(IDC_EDIT_CEMAIL, &CCustomerDlg::OnEnChangeEditCemail)
 END_MESSAGE_MAP()
 
 BOOL CCustomerDlg::OnInitDialog()
 {
 	CDialogEx::OnInitDialog();
+
+	m_goldBack.SubclassDlgItem(IDCANCEL, this);
 
 	m_list.SetExtendedStyle(LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES);
 	m_list.InsertColumn(0, L"ID", LVCFMT_LEFT, 50);
@@ -97,6 +101,11 @@ void CCustomerDlg::LoadCustomers()
 		i++;
 	}
 	mysql_free_result(res);
+
+	m_list.SetColumnWidth(0, 60);                          // ID
+	m_list.SetColumnWidth(1, LVSCW_AUTOSIZE_USEHEADER);    // Name
+	m_list.SetColumnWidth(2, LVSCW_AUTOSIZE_USEHEADER);    // Phone
+	m_list.SetColumnWidth(3, LVSCW_AUTOSIZE_USEHEADER);    // Email
 }
 
 void CCustomerDlg::OnBnClickedBtnCadd()
@@ -187,14 +196,21 @@ HBRUSH CCustomerDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
 {
 	HBRUSH hbr = CDialogEx::OnCtlColor(pDC, pWnd, nCtlColor);
 
-	if (nCtlColor == CTLCOLOR_DLG || nCtlColor == CTLCOLOR_STATIC)
+	if (nCtlColor == CTLCOLOR_STATIC)
 	{
 		pDC->SetBkMode(TRANSPARENT);
-		if (pWnd->GetDlgCtrlID() == IDC_CTITLE)
-			pDC->SetTextColor(Theme::GoldDark);
-		else
-			pDC->SetTextColor(Theme::Text);
-		return (HBRUSH)m_bgBrush.GetSafeHandle();
+
+		// keep your existing title text colour lines here
+
+		return (HBRUSH)GetStockObject(NULL_BRUSH);
 	}
 	return hbr;
+}
+
+BOOL CCustomerDlg::OnEraseBkgnd(CDC* pDC)
+{
+	CRect rc;
+	GetClientRect(rc);
+	Theme::PaintGradient(*pDC, rc);
+	return TRUE;
 }

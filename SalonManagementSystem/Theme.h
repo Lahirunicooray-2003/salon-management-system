@@ -68,3 +68,32 @@ public:
         dc->SelectObject(of);
     }
 };
+
+namespace Theme
+{
+    // soft cream gradient background
+    inline void PaintGradient(CDC& dc, CRect rc)
+    {
+        TRIVERTEX v[2] = {
+            { rc.left,  rc.top,    0xFF00, 0xFB00, 0xF200, 0 },
+            { rc.right, rc.bottom, 0xF800, 0xEA00, 0xD000, 0 } };
+        GRADIENT_RECT g = { 0, 1 };
+        dc.GradientFill(v, 2, &g, 1, GRADIENT_FILL_RECT_V);
+    }
+
+    // draws logo.png that sits next to the .exe
+    inline void DrawLogo(CDC& dc, CRect rc)
+    {
+        TCHAR p[MAX_PATH];
+        GetModuleFileName(NULL, p, MAX_PATH);
+        CString s(p);
+        s = s.Left(s.ReverseFind(L'\\') + 1) + L"logo.png";
+
+        CImage img;
+        if (SUCCEEDED(img.Load(s)))
+        {
+            dc.SetStretchBltMode(HALFTONE);
+            img.Draw(dc.GetSafeHdc(), rc);
+        }
+    }
+}

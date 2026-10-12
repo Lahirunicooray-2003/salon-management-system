@@ -56,6 +56,12 @@ BOOL CStylistDlg::OnInitDialog()
 {
 	CDialogEx::OnInitDialog();
 
+	m_goldAdd.SubclassDlgItem(IDC_BTN_TADD, this);
+	m_goldUpdate.SubclassDlgItem(IDC_BTN_TUPDATE, this);
+	m_goldDelete.SubclassDlgItem(IDC_BTN_TDELETE, this);
+	m_goldDetails.SubclassDlgItem(IDC_BTN_TDETAILS, this);
+	m_goldBack.SubclassDlgItem(IDCANCEL, this);
+
 	m_list.SetExtendedStyle(LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES);
 	m_list.InsertColumn(0, L"ID", LVCFMT_LEFT, 40);
 	m_list.InsertColumn(1, L"Name", LVCFMT_LEFT, 120);
@@ -108,6 +114,11 @@ void CStylistDlg::LoadStylists()
 		i++;
 	}
 	mysql_free_result(res);
+
+	int cols = m_list.GetHeaderCtrl()->GetItemCount();
+	m_list.SetColumnWidth(0, 60);                                  // ID
+	for (int c = 1; c < cols; c++)
+		m_list.SetColumnWidth(c, LVSCW_AUTOSIZE_USEHEADER);        // other columns fit content
 }
 
 void CStylistDlg::OnBnClickedBtnTadd()

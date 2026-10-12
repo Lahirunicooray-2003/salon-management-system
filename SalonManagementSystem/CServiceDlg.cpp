@@ -101,6 +101,11 @@ void CServiceDlg::LoadServices()
 		i++;
 	}
 	mysql_free_result(res);
+
+	int cols = m_list.GetHeaderCtrl()->GetItemCount();
+	m_list.SetColumnWidth(0, 60);                                  // ID
+	for (int c = 1; c < cols; c++)
+		m_list.SetColumnWidth(c, LVSCW_AUTOSIZE_USEHEADER);        // other columns fit content
 }
 
 void CServiceDlg::OnBnClickedBtnSadd()

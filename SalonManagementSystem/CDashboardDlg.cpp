@@ -36,6 +36,7 @@ void CDashboardDlg::DoDataExchange(CDataExchange* pDX)
 
 BEGIN_MESSAGE_MAP(CDashboardDlg, CDialogEx)
 	ON_WM_CTLCOLOR()
+    ON_WM_ERASEBKGND()
     ON_BN_CLICKED(IDC_BTN_CUSTOMERS, &CDashboardDlg::OnBnClickedBtnCustomers)
     ON_BN_CLICKED(IDC_BTN_APPOINTMENTS, &CDashboardDlg::OnBnClickedBtnAppointments)
     ON_BN_CLICKED(IDC_BTN_SERVICES, &CDashboardDlg::OnBnClickedBtnServices)
@@ -68,21 +69,19 @@ BOOL CDashboardDlg::OnInitDialog()
 }
 HBRUSH CDashboardDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
 {
-	HBRUSH hbr = CDialogEx::OnCtlColor(pDC, pWnd, nCtlColor);
-    if (nCtlColor == CTLCOLOR_DLG || nCtlColor == CTLCOLOR_STATIC)
+    HBRUSH hbr = CDialogEx::OnCtlColor(pDC, pWnd, nCtlColor);
+
+    if (nCtlColor == CTLCOLOR_STATIC)
     {
         pDC->SetBkMode(TRANSPARENT);
 
         if (pWnd->GetDlgCtrlID() == IDC_STATIC_DTITLE)
             pDC->SetTextColor(Theme::GoldDark);
 
-        return (HBRUSH)m_bgBrush.GetSafeHandle();
+        return (HBRUSH)GetStockObject(NULL_BRUSH);
     }
 
-	// TODO:  Change any attributes of the DC here
-
-	// TODO:  Return a different brush if the default is not desired
-	return hbr;
+    return hbr;
 }
 
 void CDashboardDlg::OnBnClickedBtnCustomers()
@@ -119,4 +118,30 @@ void CDashboardDlg::OnBnClickedBtnLogout()
 void CDashboardDlg::OnStnClickedStaticDtitle()
 {
     // TODO: Add your control notification handler code here
+}
+
+
+
+BOOL CDashboardDlg::OnEraseBkgnd(CDC* pDC)
+{
+    CRect rc;
+    GetClientRect(rc);
+    Theme::PaintGradient(*pDC, rc);
+
+    // logo: as big as the space above the buttons allows
+    int availH = 200;                                   // fallback
+    CWnd* pBtn = GetDlgItem(IDC_BTN_CUSTOMERS);
+    if (pBtn != nullptr)
+    {
+        CRect br;
+        pBtn->GetWindowRect(br);
+        ScreenToClient(br);
+        availH = br.top - 100;                          // leaves room for "Welcome" text
+    }
+
+    int h = availH;
+    int w = h * 420 / 300;                              // keep logo proportions
+    CRect logo((rc.Width() - w) / 2, 10, (rc.Width() + w) / 2, 10 + h);
+    Theme::DrawLogo(*pDC, logo);
+    return TRUE;
 }

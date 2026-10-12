@@ -171,6 +171,11 @@ void CAppointmentDlg::LoadAppointments()
 		i++;
 	}
 	mysql_free_result(res);
+
+	int cols = m_list.GetHeaderCtrl()->GetItemCount();
+	m_list.SetColumnWidth(0, 60);
+	for (int c = 1; c < cols; c++)
+		m_list.SetColumnWidth(c, LVSCW_AUTOSIZE_USEHEADER);
 }
 
 bool CAppointmentDlg::ValidateInput(int& custId, int& styId, int& svcId)
