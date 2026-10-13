@@ -10,7 +10,7 @@ public:
 	CDashboardDlg(CWnd* pParent = nullptr);   // standard constructor
 	virtual ~CDashboardDlg();
 
-// Dialog Data
+	// Dialog Data
 #ifdef AFX_DESIGN_TIME
 	enum { IDD = IDD_DASHBOARD1_DIALOG };
 #endif
@@ -33,11 +33,11 @@ public:
 	afx_msg void OnBnClickedBtnStylists();
 	afx_msg void OnBnClickedBtnLogout();
 	afx_msg void OnStnClickedStaticDtitle();
-    
-	public:
-		CCardButton m_goldCustomers;
-		CCardButton m_goldServices;
-		CCardButton m_goldStylists;
-		CCardButton m_goldAppointments;
-		CGoldButton m_goldLogout;
+
+public:
+	CCardButton m_goldCustomers;
+	CCardButton m_goldServices;
+	CCardButton m_goldStylists;
+	CCardButton m_goldAppointments;
+	CGoldButton m_goldLogout;
 };

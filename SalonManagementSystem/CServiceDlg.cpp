@@ -57,6 +57,12 @@ BOOL CServiceDlg::OnInitDialog()
     // Back button subclassing
     m_goldBack.SubclassDlgItem(IDCANCEL, this);
 
+    // smaller table font so every column fits neatly
+    static CFont tableFont;
+    if (tableFont.GetSafeHandle() == NULL)
+        tableFont.CreatePointFont(100, L"Segoe UI");
+    m_list.SetFont(&tableFont);
+
     m_list.SetExtendedStyle(LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES | LVS_EX_DOUBLEBUFFER);
     m_list.InsertColumn(0, L"ID", LVCFMT_LEFT, 50);
     m_list.InsertColumn(1, L"Service", LVCFMT_LEFT, 170);
@@ -204,6 +210,13 @@ void CServiceDlg::OnNMClickListServices(NMHDR* pNMHDR, LRESULT* pResult)
 
 HBRUSH CServiceDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
 {
+    if (nCtlColor == CTLCOLOR_EDIT)
+    {
+        static CBrush white(RGB(255, 255, 255));
+        pDC->SetBkColor(RGB(255, 255, 255));
+        pDC->SetTextColor(RGB(60, 40, 20));
+        return (HBRUSH)white;
+    }
     if (nCtlColor == CTLCOLOR_STATIC)
     {
         pDC->SetBkMode(TRANSPARENT);
@@ -217,43 +230,9 @@ BOOL CServiceDlg::OnEraseBkgnd(CDC* pDC)
 {
     CRect rc;
     GetClientRect(&rc);
-    Theme::PaintImageBg(*pDC, rc, _T("servicesbg.jpg"));
 
-    // semi-transparent cream plate behind every label and the title
-    for (CWnd* c = GetWindow(GW_CHILD); c != NULL; c = c->GetWindow(GW_HWNDNEXT))
-    {
-        if (!c->IsWindowVisible()) continue;
-
-        TCHAR cls[32] = { 0 };
-        GetClassName(c->GetSafeHwnd(), cls, 31);
-        if (_tcsicmp(cls, _T("Static")) != 0) continue;
-
-        CRect r;
-        c->GetWindowRect(&r);
-        ScreenToClient(&r);
-        r.InflateRect(8, 3);
-        r.IntersectRect(r, rc);
-        if (r.Width() <= 0 || r.Height() <= 0) continue;
-
-        CRgn rgn;
-        rgn.CreateRoundRectRgn(r.left, r.top, r.right + 1, r.bottom + 1, 14, 14);
-        int saved = pDC->SaveDC();
-        pDC->SelectClipRgn(&rgn);
-
-        CDC mem;
-        mem.CreateCompatibleDC(pDC);
-        CBitmap bmp;
-        bmp.CreateCompatibleBitmap(pDC, r.Width(), r.Height());
-        CBitmap* old = mem.SelectObject(&bmp);
-        mem.FillSolidRect(0, 0, r.Width(), r.Height(), RGB(255, 251, 242));
-        BLENDFUNCTION bf = { AC_SRC_OVER, 0, 215, 0 };
-        AlphaBlend(pDC->GetSafeHdc(), r.left, r.top, r.Width(), r.Height(),
-            mem.GetSafeHdc(), 0, 0, r.Width(), r.Height(), bf);
-        mem.SelectObject(old);
-        pDC->RestoreDC(saved);
-    }
-
-    // Main Form Panel
+    // background photo, then ONE cream card behind all controls
+    Theme::PaintImageBg(*pDC, rc, _T("servicesbg.jpg"), 60);
     Theme::DrawFormPanel(this, *pDC);
 
     return TRUE;

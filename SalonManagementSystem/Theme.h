@@ -26,52 +26,80 @@ namespace Theme
 
     // background photo (next to the .exe), cropped to fill. Falls back to gradient.
     // overlay: 0 = photo only, 255 = solid cream (a little overlay keeps the photo soft)
+    // The scaled picture is built ONCE per window size and cached, so painting is instant.
     inline void PaintImageBg(CDC& dc, const CRect& rc, LPCTSTR fileName, int overlay = 0)
     {
-        static std::map<CString, CImage*> cache;
+        struct Entry
+        {
+            CImage* src = NULL;
+            bool loaded = false;
+            CBitmap comp;
+            int w = 0, h = 0, ov = -1;
+        };
+        static std::map<CString, Entry> cache;
 
         CString key(fileName);
-        auto it = cache.find(key);
-        if (it == cache.end())
+        Entry& e = cache[key];
+
+        if (!e.loaded)
         {
+            e.loaded = true;
             CImage* img = new CImage();
             TCHAR p[MAX_PATH];
             GetModuleFileName(NULL, p, MAX_PATH);
             CString path(p);
             path = path.Left(path.ReverseFind(_T('\\')) + 1) + key;
             if (FAILED(img->Load(path))) { delete img; img = NULL; }
-            it = cache.insert(std::make_pair(key, img)).first;
+            e.src = img;
         }
 
-        CImage* bg = it->second;
-        if (bg == NULL || bg->IsNull() || rc.Width() <= 0 || rc.Height() <= 0)
+        int W = rc.Width(), H = rc.Height();
+        if (e.src == NULL || e.src->IsNull() || W <= 0 || H <= 0)
         {
             PaintGradient(dc, rc);
             return;
         }
 
-        int iw = bg->GetWidth(), ih = bg->GetHeight();
-        int sw = iw, sh = ih;
-        if (iw * rc.Height() > ih * rc.Width()) sw = ih * rc.Width() / rc.Height();
-        else                                    sh = iw * rc.Height() / rc.Width();
-        int sx = (iw - sw) / 2, sy = (ih - sh) / 2;
-
-        dc.SetStretchBltMode(HALFTONE);
-        bg->Draw(dc.GetSafeHdc(), 0, 0, rc.Width(), rc.Height(), sx, sy, sw, sh);
-
-        if (overlay > 0)
+        if (e.comp.GetSafeHandle() == NULL || e.w != W || e.h != H || e.ov != overlay)
         {
+            e.comp.DeleteObject();
+            e.comp.CreateCompatibleBitmap(&dc, W, H);
+
             CDC mem;
             mem.CreateCompatibleDC(&dc);
-            CBitmap bmp;
-            bmp.CreateCompatibleBitmap(&dc, rc.Width(), rc.Height());
-            CBitmap* old = mem.SelectObject(&bmp);
-            mem.FillSolidRect(0, 0, rc.Width(), rc.Height(), RGB(255, 251, 242));
-            BLENDFUNCTION bf = { AC_SRC_OVER, 0, (BYTE)overlay, 0 };
-            AlphaBlend(dc.GetSafeHdc(), 0, 0, rc.Width(), rc.Height(),
-                mem.GetSafeHdc(), 0, 0, rc.Width(), rc.Height(), bf);
+            CBitmap* old = mem.SelectObject(&e.comp);
+
+            int iw = e.src->GetWidth(), ih = e.src->GetHeight();
+            int sw = iw, sh = ih;
+            if (iw * H > ih * W) sw = ih * W / H;
+            else                 sh = iw * H / W;
+            int sx = (iw - sw) / 2, sy = (ih - sh) / 2;
+
+            mem.SetStretchBltMode(HALFTONE);
+            e.src->Draw(mem.GetSafeHdc(), 0, 0, W, H, sx, sy, sw, sh);
+
+            if (overlay > 0)
+            {
+                CDC ov;
+                ov.CreateCompatibleDC(&dc);
+                CBitmap obmp;
+                obmp.CreateCompatibleBitmap(&dc, W, H);
+                CBitmap* oold = ov.SelectObject(&obmp);
+                ov.FillSolidRect(0, 0, W, H, RGB(255, 251, 242));
+                BLENDFUNCTION bf = { AC_SRC_OVER, 0, (BYTE)overlay, 0 };
+                AlphaBlend(mem.GetSafeHdc(), 0, 0, W, H, ov.GetSafeHdc(), 0, 0, W, H, bf);
+                ov.SelectObject(oold);
+            }
+
             mem.SelectObject(old);
+            e.w = W; e.h = H; e.ov = overlay;
         }
+
+        CDC mem2;
+        mem2.CreateCompatibleDC(&dc);
+        CBitmap* old2 = mem2.SelectObject(&e.comp);
+        dc.BitBlt(rc.left, rc.top, W, H, &mem2, 0, 0, SRCCOPY);
+        mem2.SelectObject(old2);
     }
 
     // semi-transparent cream rounded card with a gold border
@@ -192,7 +220,7 @@ public:
     }
 };
 
-// card style button: caption format "Title|Short description"
+// rose-gold card button: caption format "Title|Short description"
 class CCardButton : public CButton
 {
 public:
@@ -207,29 +235,44 @@ public:
         int p = cap.Find(L'|');
         if (p >= 0) { title = cap.Left(p); sub = cap.Mid(p + 1); }
 
-        dc->FillSolidRect(rc, Theme::Cream);
-        CBrush br(down ? RGB(246, 238, 222) : RGB(255, 255, 255));
-        CPen pen(PS_SOLID, 1, RGB(232, 215, 180));
-        CBrush* ob = dc->SelectObject(&br);
+        // metallic rose-gold gradient: dark edges, light centre
+        int e = down ? 0xB000 : 0xC900;      // edge red
+        int eg = down ? 0x7C00 : 0x9400;     // edge green
+        int eb = down ? 0x6200 : 0x7E00;     // edge blue
+        int m = down ? 0xD800 : 0xE800;      // middle red
+        int mg = down ? 0xA200 : 0xC000;     // middle green
+        int mb = down ? 0x8C00 : 0xAC00;     // middle blue
+        int midX = rc.left + rc.Width() / 2;
+        TRIVERTEX v[3] = {
+            { rc.left,  rc.top,    (COLOR16)e, (COLOR16)eg, (COLOR16)eb, 0 },
+            { midX,     rc.bottom, (COLOR16)m, (COLOR16)mg, (COLOR16)mb, 0 },
+            { rc.right, rc.bottom, (COLOR16)e, (COLOR16)eg, (COLOR16)eb, 0 } };
+        GRADIENT_RECT g[2] = { { 0, 1 }, { 1, 2 } };
+        dc->GradientFill(v, 3, g, 2, GRADIENT_FILL_RECT_H);
+
+        // thin light border
+        CPen pen(PS_SOLID, 1, RGB(244, 222, 205));
+        CBrush* ob = (CBrush*)dc->SelectStockObject(NULL_BRUSH);
         CPen* op = dc->SelectObject(&pen);
-        dc->RoundRect(rc, CPoint(18, 18));
-        dc->SelectObject(ob); dc->SelectObject(op);
+        dc->Rectangle(rc);
+        dc->SelectObject(op);
+        dc->SelectObject(ob);
 
         int H = rc.Height();
         int dia = H * 46 / 100;
-        CRect ic(rc.left + 18, rc.top + (H - dia) / 2,
-            rc.left + 18 + dia, rc.top + (H - dia) / 2 + dia);
-        CBrush ib(RGB(246, 232, 196));
-        CPen ip(PS_SOLID, 1, RGB(246, 232, 196));
-        ob = dc->SelectObject(&ib); op = dc->SelectObject(&ip);
+        CRect ic(rc.left + 20, rc.top + (H - dia) / 2,
+            rc.left + 20 + dia, rc.top + (H - dia) / 2 + dia);
+        CBrush ib(RGB(246, 232, 200));
+        CPen ip(PS_SOLID, 1, RGB(246, 232, 200));
+        ob = (CBrush*)dc->SelectObject(&ib); op = dc->SelectObject(&ip);
         dc->Ellipse(ic);
         dc->SelectObject(ob); dc->SelectObject(op);
 
         CFont fi, ft, fs, fo;
         fi.CreateFontW(-(dia * 55 / 100), 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, 0, L"Segoe UI");
-        ft.CreateFontW(-(H * 26 / 100), 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, 0, L"Segoe UI");
-        fs.CreateFontW(-(H * 15 / 100), 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, 0, L"Segoe UI");
-        fo.CreateFontW(-(H * 15 / 100), 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, 0, L"Segoe UI");
+        ft.CreateFontW(-(H * 24 / 100), 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, 0, L"Segoe UI");
+        fs.CreateFontW(-(H * 14 / 100), 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, 0, L"Segoe UI");
+        fo.CreateFontW(-(H * 14 / 100), 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, 0, L"Segoe UI");
 
         dc->SetBkMode(TRANSPARENT);
 
@@ -239,16 +282,16 @@ public:
 
         int tx = ic.right + 20;
         dc->SelectObject(&ft);
-        dc->SetTextColor(RGB(50, 40, 25));
+        dc->SetTextColor(RGB(60, 35, 20));
         dc->TextOut(tx, rc.top + H * 12 / 100, title);
 
         dc->SelectObject(&fs);
-        dc->SetTextColor(RGB(120, 110, 95));
+        dc->SetTextColor(RGB(90, 55, 38));
         dc->TextOut(tx, rc.top + H * 44 / 100, sub);
 
         dc->SelectObject(&fo);
-        dc->SetTextColor(Theme::Gold);
-        dc->TextOut(tx, rc.top + H * 68 / 100, L"Open  \u2192");
+        dc->SetTextColor(RGB(120, 70, 30));
+        dc->TextOut(tx, rc.top + H * 68 / 100, L"Open  →");
 
         dc->SelectObject(of);
     }

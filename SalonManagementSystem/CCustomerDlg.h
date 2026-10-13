@@ -37,12 +37,11 @@ public:
     CString m_name;
     CString m_phone;
     CString m_email;
-    int m_selectedId;
+    int m_selectedId = 0;
 
     CListCtrl m_list;
     CStatic m_title;
 
-    
     CMFCButton m_btnAdd;
     CMFCButton m_btnUpdate;
     CMFCButton m_btnDelete;

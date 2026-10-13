@@ -62,6 +62,36 @@ BOOL CDashboardDlg::OnInitDialog()
 	m_goldAppointments.SubclassDlgItem(IDC_BTN_APPOINTMENTS, this);
 	m_goldLogout.SubclassDlgItem(IDC_BTN_LOGOUT, this);
 
+	// ---- neat 2 x 2 card grid, positioned by code so everything lines up ----
+	CRect rc;
+	GetClientRect(&rc);
+	int W = rc.Width();
+	int H = rc.Height();
+
+	int bannerH = 150;
+	int body = H - bannerH;
+
+	int margin = W * 8 / 100;
+	int gap = W * 5 / 100;
+	int cardW = (W - 2 * margin - gap) / 2;
+	int cardH = body * 24 / 100;
+	int rowGap = body * 7 / 100;
+
+	int row1 = bannerH + body * 14 / 100;
+	int row2 = row1 + cardH + rowGap;
+	int x1 = margin;
+	int x2 = margin + cardW + gap;
+
+	GetDlgItem(IDC_BTN_CUSTOMERS)->MoveWindow(x1, row1, cardW, cardH);
+	GetDlgItem(IDC_BTN_SERVICES)->MoveWindow(x2, row1, cardW, cardH);
+	GetDlgItem(IDC_BTN_STYLISTS)->MoveWindow(x1, row2, cardW, cardH);
+	GetDlgItem(IDC_BTN_APPOINTMENTS)->MoveWindow(x2, row2, cardW, cardH);
+
+	int lw = W * 26 / 100;
+	int lh = body * 10 / 100;
+	if (lh < 40) lh = 40;
+	GetDlgItem(IDC_BTN_LOGOUT)->MoveWindow((W - lw) / 2, H - lh - body * 6 / 100, lw, lh);
+
 	return TRUE;
 }
 

@@ -22,7 +22,7 @@ protected:
 protected:
     HICON m_hIcon;
     CBrush m_bgBrush;
-    CBrush m_editBrush; // Edit boxes ke liye cream brush yahan declare kiya gaya hai
+    CBrush m_editBrush;      // beige brush for the Username / Password edit boxes
     CFont m_titleFont;
     HWND m_titleHwnd = nullptr;
 

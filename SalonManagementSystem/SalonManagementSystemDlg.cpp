@@ -16,6 +16,80 @@ static std::string ToUtf8(const CString& s)
     return std::string(a);
 }
 
+// Loads logo.png (next to the .exe) once and removes its plain background,
+// so the logo sits directly on the card without a visible box.
+// Fast version: scales the logo down first and works on raw pixel memory.
+static CImage* GetLogoArgb()
+{
+    static CImage argb;
+    static bool tried = false;
+    if (!tried)
+    {
+        tried = true;
+
+        TCHAR p[MAX_PATH];
+        GetModuleFileName(NULL, p, MAX_PATH);
+        CString path(p);
+        path = path.Left(path.ReverseFind(_T('\\')) + 1) + _T("logo.png");
+
+        CImage src;
+        if (FAILED(src.Load(path))) return NULL;
+
+        int sw = src.GetWidth(), sh = src.GetHeight();
+        if (sw <= 0 || sh <= 0) return NULL;
+
+        // work at a sensible size (max 700 px) -> much faster
+        int w = sw, h = sh;
+        if (w > 700) { h = h * 700 / w; w = 700; }
+        if (h > 700) { w = w * 700 / h; h = 700; }
+
+        CImage tmp;
+        if (!tmp.Create(w, h, 24)) return NULL;
+        HDC hd = tmp.GetDC();
+        SetStretchBltMode(hd, HALFTONE);
+        SetBrushOrgEx(hd, 0, 0, NULL);
+        src.StretchBlt(hd, 0, 0, w, h, SRCCOPY);
+        tmp.ReleaseDC();
+
+        if (!argb.Create(w, h, 32, CImage::createAlphaChannel)) return NULL;
+
+        // background colour = average of the four corner pixels (BGR order in memory)
+        BYTE* top = (BYTE*)tmp.GetPixelAddress(0, 0);
+        BYTE* bot = (BYTE*)tmp.GetPixelAddress(0, h - 1);
+        int br = (top[2] + top[3 * (w - 1) + 2] + bot[2] + bot[3 * (w - 1) + 2]) / 4;
+        int bg = (top[1] + top[3 * (w - 1) + 1] + bot[1] + bot[3 * (w - 1) + 1]) / 4;
+        int bb = (top[0] + top[3 * (w - 1) + 0] + bot[0] + bot[3 * (w - 1) + 0]) / 4;
+
+        for (int y = 0; y < h; y++)
+        {
+            BYTE* s = (BYTE*)tmp.GetPixelAddress(0, y);
+            BYTE* d = (BYTE*)argb.GetPixelAddress(0, y);
+            for (int x = 0; x < w; x++, s += 3, d += 4)
+            {
+                int b = s[0], g = s[1], r = s[2];
+
+                int dist = abs(r - br);
+                int dg = abs(g - bg); if (dg > dist) dist = dg;
+                int db = abs(b - bb); if (db > dist) dist = db;
+
+                int a = (dist - 18) * 255 / 40;           // 0 near the background colour, 255 on the ink
+                if (a < 0) a = 0;
+                if (a > 255) a = 255;
+
+                int pr = r - br * (255 - a) / 255; if (pr < 0) pr = 0;   // premultiplied
+                int pg = g - bg * (255 - a) / 255; if (pg < 0) pg = 0;
+                int pb = b - bb * (255 - a) / 255; if (pb < 0) pb = 0;
+
+                d[0] = (BYTE)pb;
+                d[1] = (BYTE)pg;
+                d[2] = (BYTE)pr;
+                d[3] = (BYTE)a;
+            }
+        }
+    }
+    return argb.IsNull() ? NULL : &argb;
+}
+
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
@@ -113,10 +187,8 @@ BOOL CSalonManagementSystemDlg::OnInitDialog()
     SetIcon(m_hIcon, TRUE);         // Set big icon
     SetIcon(m_hIcon, FALSE);        // Set small icon
 
-    // TODO: Add extra initialization here
-
     m_bgBrush.CreateSolidBrush(Theme::Bg);
-    m_editBrush.CreateSolidBrush(RGB(255, 252, 246)); // Edit box එකට ක්‍රීම් පාට පසුබිම
+    m_editBrush.CreateSolidBrush(RGB(243, 232, 205));      // beige edit boxes
     m_titleFont.CreatePointFont(260, L"Segoe UI Semibold");
 
     CWnd* pChild = GetWindow(GW_CHILD);
@@ -131,6 +203,39 @@ BOOL CSalonManagementSystemDlg::OnInitDialog()
             break;
         }
         pChild = pChild->GetNextWindow();
+    }
+
+    // smaller, elegant "Username:" / "Password:" labels
+    static CFont labelFont;
+    if (labelFont.GetSafeHandle() == NULL)
+        labelFont.CreatePointFont(150, L"Segoe UI Semibold");
+
+    for (CWnd* c = GetWindow(GW_CHILD); c != NULL; c = c->GetWindow(GW_HWNDNEXT))
+    {
+        CString txt;
+        c->GetWindowText(txt);
+        if (txt.Find(L"Username") >= 0 || txt.Find(L"Password") >= 0)
+        {
+            TCHAR cls[32] = { 0 };
+            GetClassName(c->GetSafeHwnd(), cls, 31);
+            if (_tcsicmp(cls, _T("Static")) != 0) continue;
+
+            c->SetFont(&labelFont);
+            c->ModifyStyle(0, SS_CENTERIMAGE);   // vertically centred next to the box
+        }
+    }
+
+    // placeholder text inside the boxes
+    ::SendMessage(GetDlgItem(IDC_EDIT_USERNAME)->GetSafeHwnd(), EM_SETCUEBANNER, TRUE, (LPARAM)L"Username");
+    ::SendMessage(GetDlgItem(IDC_EDIT_PASSWORD)->GetSafeHwnd(), EM_SETCUEBANNER, TRUE, (LPARAM)L"Password");
+
+    // preload logo + background now, so the first paint is instant
+    GetLogoArgb();
+    {
+        CClientDC dcPre(this);
+        CRect rcPre;
+        GetClientRect(&rcPre);
+        Theme::PaintImageBg(dcPre, rcPre, _T("loginbg.jpg"));
     }
 
     return TRUE;  // return TRUE  unless you set the focus to a control
@@ -232,11 +337,11 @@ HBRUSH CSalonManagementSystemDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColo
         return (HBRUSH)GetStockObject(NULL_BRUSH);
     }
 
-    // Username සහ Password Edit boxes වල පාට වෙනස් කිරීම
+    // beige Username / Password edit boxes
     if (nCtlColor == CTLCOLOR_EDIT)
     {
         pDC->SetTextColor(RGB(75, 55, 40));
-        pDC->SetBkColor(RGB(255, 252, 246));
+        pDC->SetBkColor(RGB(243, 232, 205));
 
         return m_editBrush.GetSafeHandle()
             ? (HBRUSH)m_editBrush.GetSafeHandle()
@@ -251,45 +356,27 @@ BOOL CSalonManagementSystemDlg::OnEraseBkgnd(CDC* pDC)
     CRect rc;
     GetClientRect(&rc);
 
-    // 1) Background photo (loaded once), cropped to fill without stretching
-    static CImage bg;
-    static bool tried = false;
-    if (!tried)
-    {
-        tried = true;
-        TCHAR p[MAX_PATH];
-        GetModuleFileName(NULL, p, MAX_PATH);
-        CString path(p);
-        path = path.Left(path.ReverseFind(_T('\\')) + 1) + _T("loginbg.jpg");
-        bg.Load(path);
-    }
+    // 1) Background photo (cached, built once per window size)
+    Theme::PaintImageBg(*pDC, rc, _T("loginbg.jpg"));
 
-    if (!bg.IsNull())
-    {
-        int iw = bg.GetWidth(), ih = bg.GetHeight();
-        int sw = iw, sh = ih;
-        // crop source so its aspect ratio matches the dialog
-        if (iw * rc.Height() > ih * rc.Width()) sw = ih * rc.Width() / rc.Height();
-        else                                    sh = iw * rc.Height() / rc.Width();
-        int sx = (iw - sw) / 2, sy = (ih - sh) / 2;
-        pDC->SetStretchBltMode(HALFTONE);
-        bg.Draw(pDC->GetSafeHdc(), 0, 0, rc.Width(), rc.Height(), sx, sy, sw, sh);
-    }
-    else
-    {
-        Theme::PaintGradient(*pDC, rc);
-    }
-
-    // 2) Card rectangle that wraps all controls + the logo area
+    // 2) Logo area above the Username box, keeping the logo's own proportions
     CRect ur;
     GetDlgItem(IDC_EDIT_USERNAME)->GetWindowRect(&ur);
     ScreenToClient(&ur);
 
-    int availH = ur.top - 30;
-    int h = availH;
-    int w = h * 420 / 300;
-    CRect logo((rc.Width() - w) / 2, 10, (rc.Width() + w) / 2, 10 + h);
+    CImage* lg = GetLogoArgb();
+    int top = 22;
+    int h = ur.top - top - 16;
+    if (h < 40) h = 40;
+    int w = lg ? h * lg->GetWidth() / lg->GetHeight() : h * 420 / 300;
+    if (w > rc.Width() - 100)
+    {
+        w = rc.Width() - 100;
+        if (lg) h = w * lg->GetHeight() / lg->GetWidth();
+    }
+    CRect logo((rc.Width() - w) / 2, top, (rc.Width() + w) / 2, top + h);
 
+    // 3) Card rectangle that wraps all controls + the logo
     CRect card = logo;
     for (CWnd* c = GetWindow(GW_CHILD); c != NULL; c = c->GetWindow(GW_HWNDNEXT))
     {
@@ -299,7 +386,7 @@ BOOL CSalonManagementSystemDlg::OnEraseBkgnd(CDC* pDC)
         ScreenToClient(&r);
         card.UnionRect(card, r);
     }
-    card.InflateRect(30, 12);
+    card.InflateRect(30, 14);
     card.IntersectRect(card, rc);
 
     // semi-transparent cream card with rounded corners
@@ -314,21 +401,29 @@ BOOL CSalonManagementSystemDlg::OnEraseBkgnd(CDC* pDC)
     bmp.CreateCompatibleBitmap(pDC, card.Width(), card.Height());
     CBitmap* old = mem.SelectObject(&bmp);
     mem.FillSolidRect(0, 0, card.Width(), card.Height(), RGB(255, 251, 242));
-    BLENDFUNCTION bf = { AC_SRC_OVER, 0, 225, 0 };
+    BLENDFUNCTION bf = { AC_SRC_OVER, 0, 205, 0 };
     AlphaBlend(pDC->GetSafeHdc(), card.left, card.top, card.Width(), card.Height(),
         mem.GetSafeHdc(), 0, 0, card.Width(), card.Height(), bf);
     mem.SelectObject(old);
     pDC->RestoreDC(saved);
 
-    // gold border
-    CPen pen(PS_SOLID, 2, RGB(224, 196, 140));
+    // thin gold border
+    CPen pen(PS_SOLID, 1, RGB(232, 210, 160));
     CPen* op = pDC->SelectObject(&pen);
     CBrush* ob = (CBrush*)pDC->SelectStockObject(NULL_BRUSH);
     pDC->RoundRect(card, CPoint(28, 28));
     pDC->SelectObject(op);
     pDC->SelectObject(ob);
 
-    // 3) logo on the card
-    Theme::DrawLogo(*pDC, logo);
+    // 4) logo on the card (transparent background)
+    if (lg)
+    {
+        pDC->SetStretchBltMode(HALFTONE);
+        lg->Draw(pDC->GetSafeHdc(), logo);
+    }
+    else
+    {
+        Theme::DrawLogo(*pDC, logo);
+    }
     return TRUE;
 }
