@@ -241,6 +241,7 @@
     <ResourceCompile Include="SalonManagementSystem.rc" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="C:\Users\user\Downloads\README.md" />
     <None Include="res\SalonManagementSystem.rc2" />
   </ItemGroup>
   <ItemGroup>
