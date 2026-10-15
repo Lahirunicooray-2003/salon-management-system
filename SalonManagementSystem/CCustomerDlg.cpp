@@ -5,6 +5,7 @@
 #include "DBConnection.h"
 #include "Customer.h"
 #include "Theme.h"
+#include "SearchBox.h"
 
 #include <string>
 #include <stdexcept>
@@ -18,6 +19,9 @@ static std::string ToUtf8(const CString& s)
     CStringA a(CW2A(s, CP_UTF8));
     return std::string(a);
 }
+
+// search box that filters the list while typing
+static CSearchBox s_search;
 
 IMPLEMENT_DYNAMIC(CCustomerDlg, CDialogEx)
 
@@ -66,6 +70,8 @@ BEGIN_MESSAGE_MAP(CCustomerDlg, CDialogEx)
     ON_WM_CTLCOLOR()
     ON_WM_ERASEBKGND()
 
+    ON_STN_CLICKED(IDC_CTITLE, &CCustomerDlg::OnStnClickedCtitle)
+    ON_NOTIFY(LVN_ITEMCHANGED, IDC_LIST_CUSTOMERS, &CCustomerDlg::OnLvnItemchangedListCustomers)
 END_MESSAGE_MAP()
 
 
@@ -113,6 +119,9 @@ BOOL CCustomerDlg::OnInitDialog()
 
     // Initial selection
     m_selectedId = 0;
+
+    // Search box above the table
+    s_search.Init(this, &m_list, 9100, L"Search...");
 
     // Load database records
     LoadCustomers();
@@ -189,6 +198,8 @@ void CCustomerDlg::LoadCustomers()
     m_list.SetColumnWidth(1, LVSCW_AUTOSIZE_USEHEADER);
     m_list.SetColumnWidth(2, LVSCW_AUTOSIZE_USEHEADER);
     m_list.SetColumnWidth(3, LVSCW_AUTOSIZE_USEHEADER);
+
+    s_search.Capture();   // remember all rows, re-apply the filter
 
     m_list.Invalidate();
 }
@@ -531,7 +542,7 @@ BOOL CCustomerDlg::OnEraseBkgnd(CDC* pDC)
     CRect rc;
     GetClientRect(&rc);
 
-    // Background image ආපහු සක්‍රීය කරන ලදී
+    
     Theme::PaintImageBg(
         *pDC, rc, _T("customersbg.jpg")
     );
@@ -540,4 +551,14 @@ BOOL CCustomerDlg::OnEraseBkgnd(CDC* pDC)
     Theme::DrawFormPanel(this, *pDC);
 
     return TRUE;
+}
+void CCustomerDlg::OnStnClickedCtitle()
+{
+    // TODO: Add your control notification handler code here
+}
+void CCustomerDlg::OnLvnItemchangedListCustomers(NMHDR* pNMHDR, LRESULT* pResult)
+{
+    LPNMLISTVIEW pNMLV = reinterpret_cast<LPNMLISTVIEW>(pNMHDR);
+    // TODO: Add your control notification handler code here
+    *pResult = 0;
 }

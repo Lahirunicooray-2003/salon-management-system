@@ -72,6 +72,9 @@
     <ClInclude Include="CAppointmentDlg.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\new\SearchBox.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="SalonManagementSystem.cpp">

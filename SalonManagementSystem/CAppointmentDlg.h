@@ -50,9 +50,14 @@ public:
     void SelectByData(CComboBox& box, int id);
     bool ValidateInput(int& custId, int& styId, int& svcId);
     bool HasConflict(int styId, const std::string& date, const std::string& time, int excludeId);
+    void SetStatus(int id, const char* status);
 
     afx_msg void OnBnClickedBtnAadd();
     afx_msg void OnBnClickedBtnAupdate();
     afx_msg void OnBnClickedBtnAdelete();
     afx_msg void OnNMClickListAppts(NMHDR* pNMHDR, LRESULT* pResult);
+    afx_msg void OnNMRClickListAppts(NMHDR* pNMHDR, LRESULT* pResult);
+    afx_msg void OnNMCustomdrawListAppts(NMHDR* pNMHDR, LRESULT* pResult);
+    afx_msg void OnBnClickedCancel();
+    afx_msg void OnLvnItemchangedListAppts(NMHDR* pNMHDR, LRESULT* pResult);
 };

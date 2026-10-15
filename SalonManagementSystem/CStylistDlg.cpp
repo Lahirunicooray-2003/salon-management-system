@@ -5,6 +5,7 @@
 #include "DBConnection.h"
 #include "Stylist.h"
 #include "Theme.h"
+#include "SearchBox.h"
 #include <string>
 #include <memory>
 
@@ -18,6 +19,9 @@ static CString FromUtf8(const std::string& s)
 {
 	return CString(CA2W(s.c_str(), CP_UTF8));
 }
+
+// search box that filters the list while typing
+static CSearchBox s_search;
 
 IMPLEMENT_DYNAMIC(CStylistDlg, CDialogEx)
 
@@ -103,6 +107,9 @@ BOOL CStylistDlg::OnInitDialog()
 	m_list.SetTextBkColor(RGB(255, 250, 240));
 	m_list.SetTextColor(RGB(90, 65, 45));
 
+	// search box above the list
+	s_search.Init(this, &m_list, 9100, L"Search...");
+
 	LoadStylists();
 	return TRUE;
 }
@@ -132,6 +139,8 @@ void CStylistDlg::LoadStylists()
 	m_list.SetColumnWidth(0, 60);
 	for (int c = 1; c < cols; c++)
 		m_list.SetColumnWidth(c, LVSCW_AUTOSIZE_USEHEADER);
+
+	s_search.Capture();   // remember all rows, re-apply the filter
 }
 
 void CStylistDlg::OnBnClickedBtnTadd()

@@ -51,4 +51,6 @@ public:
     CFont m_tableFont;
     CBrush m_bgBrush;
     CBrush m_editBrush;
+    afx_msg void OnStnClickedCtitle();
+    afx_msg void OnLvnItemchangedListCustomers(NMHDR* pNMHDR, LRESULT* pResult);
 };

@@ -47,4 +47,5 @@ public:
     afx_msg void OnBnClickedBtnSupdate();
     afx_msg void OnBnClickedBtnSdelete();
     afx_msg void OnNMClickListServices(NMHDR* pNMHDR, LRESULT* pResult);
+    afx_msg void OnLvnItemchangedListServices(NMHDR* pNMHDR, LRESULT* pResult);
 };

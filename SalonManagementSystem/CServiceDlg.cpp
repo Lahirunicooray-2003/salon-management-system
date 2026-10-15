@@ -4,6 +4,7 @@
 #include "CServiceDlg.h"
 #include "DBConnection.h"
 #include "Theme.h"
+#include "SearchBox.h"
 #include <string>
 
 static std::string ToUtf8(const CString& s)
@@ -11,6 +12,9 @@ static std::string ToUtf8(const CString& s)
     CStringA a(CW2A(s, CP_UTF8));
     return std::string(a);
 }
+
+// search box that filters the list while typing
+static CSearchBox s_search;
 
 IMPLEMENT_DYNAMIC(CServiceDlg, CDialogEx)
 
@@ -43,6 +47,7 @@ BEGIN_MESSAGE_MAP(CServiceDlg, CDialogEx)
     ON_NOTIFY(NM_CLICK, IDC_LIST_SERVICES, &CServiceDlg::OnNMClickListServices)
     ON_WM_CTLCOLOR()
     ON_WM_ERASEBKGND()
+    ON_NOTIFY(LVN_ITEMCHANGED, IDC_LIST_SERVICES, &CServiceDlg::OnLvnItemchangedListServices)
 END_MESSAGE_MAP()
 
 BOOL CServiceDlg::OnInitDialog()
@@ -90,6 +95,9 @@ BOOL CServiceDlg::OnInitDialog()
     m_list.SetTextBkColor(RGB(255, 250, 240));
     m_list.SetTextColor(RGB(90, 65, 45));
 
+    // search box above the list
+    s_search.Init(this, &m_list, 9100, L"Search...");
+
     LoadServices();
     return TRUE;
 }
@@ -120,6 +128,8 @@ void CServiceDlg::LoadServices()
     m_list.SetColumnWidth(0, 60);
     for (int c = 1; c < cols; c++)
         m_list.SetColumnWidth(c, LVSCW_AUTOSIZE_USEHEADER);
+
+    s_search.Capture();   // remember all rows, re-apply the filter
 }
 
 void CServiceDlg::OnBnClickedBtnSadd()
@@ -236,4 +246,11 @@ BOOL CServiceDlg::OnEraseBkgnd(CDC* pDC)
     Theme::DrawFormPanel(this, *pDC);
 
     return TRUE;
+}
+
+void CServiceDlg::OnLvnItemchangedListServices(NMHDR* pNMHDR, LRESULT* pResult)
+{
+    LPNMLISTVIEW pNMLV = reinterpret_cast<LPNMLISTVIEW>(pNMHDR);
+    // TODO: Add your control notification handler code here
+    *pResult = 0;
 }

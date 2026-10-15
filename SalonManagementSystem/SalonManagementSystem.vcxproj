@@ -201,6 +201,7 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\new\SearchBox.h" />
     <ClInclude Include="CAppointmentDlg.h" />
     <ClInclude Include="CCustomerDlg.h" />
     <ClInclude Include="CDashboardDlg.h" />

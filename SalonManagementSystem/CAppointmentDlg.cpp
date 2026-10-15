@@ -4,6 +4,7 @@
 #include "CAppointmentDlg.h"
 #include "DBConnection.h"
 #include "Theme.h"
+#include "SearchBox.h"
 #include <string>
 
 static std::string ToUtf8(const CString& s)
@@ -32,6 +33,9 @@ static bool IsValidTime(const CString& s)
 	if (swscanf_s(s, L"%2d:%2d", &h, &mi) != 2) return false;
 	return h >= 0 && h <= 23 && mi >= 0 && mi <= 59;
 }
+
+// search box that filters the list while typing
+static CSearchBox s_search;
 
 IMPLEMENT_DYNAMIC(CAppointmentDlg, CDialogEx)
 
@@ -64,8 +68,12 @@ BEGIN_MESSAGE_MAP(CAppointmentDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BTN_AUPDATE, &CAppointmentDlg::OnBnClickedBtnAupdate)
 	ON_BN_CLICKED(IDC_BTN_ADELETE, &CAppointmentDlg::OnBnClickedBtnAdelete)
 	ON_NOTIFY(NM_CLICK, IDC_LIST_APPTS, &CAppointmentDlg::OnNMClickListAppts)
+	ON_NOTIFY(NM_RCLICK, IDC_LIST_APPTS, &CAppointmentDlg::OnNMRClickListAppts)
+	ON_NOTIFY(NM_CUSTOMDRAW, IDC_LIST_APPTS, &CAppointmentDlg::OnNMCustomdrawListAppts)
 	ON_WM_CTLCOLOR()
 	ON_WM_ERASEBKGND()
+	ON_BN_CLICKED(IDCANCEL, &CAppointmentDlg::OnBnClickedCancel)
+	ON_NOTIFY(LVN_ITEMCHANGED, IDC_LIST_APPTS, &CAppointmentDlg::OnLvnItemchangedListAppts)
 END_MESSAGE_MAP()
 
 BOOL CAppointmentDlg::OnInitDialog()
@@ -113,6 +121,9 @@ BOOL CAppointmentDlg::OnInitDialog()
 	m_list.SetBkColor(RGB(255, 250, 240));
 	m_list.SetTextBkColor(RGB(255, 250, 240));
 	m_list.SetTextColor(RGB(90, 65, 45));
+
+	// search box above the list
+	s_search.Init(this, &m_list, 9100, L"Search...");
 
 	FillCombo(m_comboCustomer, "SELECT CustomerID, Name FROM Customer ORDER BY Name");
 	FillCombo(m_comboStylist, "SELECT StylistID, Name FROM Stylist ORDER BY Name");
@@ -188,6 +199,8 @@ void CAppointmentDlg::LoadAppointments()
 	m_list.SetColumnWidth(0, 60);
 	for (int c = 1; c < cols; c++)
 		m_list.SetColumnWidth(c, LVSCW_AUTOSIZE_USEHEADER);
+
+	s_search.Capture();   // remember all rows, re-apply the filter
 }
 
 bool CAppointmentDlg::ValidateInput(int& custId, int& styId, int& svcId)
@@ -226,7 +239,7 @@ bool CAppointmentDlg::HasConflict(int styId, const std::string& date, const std:
 	std::string sql = "SELECT COUNT(*) FROM Appointment WHERE StylistID=" + std::to_string(styId)
 		+ " AND AppointmentDate='" + db.Escape(date)
 		+ "' AND AppointmentTime='" + db.Escape(time)
-		+ "' AND AppointmentID<>" + std::to_string(excludeId);
+		+ "' AND Status<>'Cancelled' AND AppointmentID<>" + std::to_string(excludeId);
 
 	bool conflict = false;
 	MYSQL_RES* res = db.Query(sql);
@@ -349,6 +362,66 @@ void CAppointmentDlg::OnNMClickListAppts(NMHDR* pNMHDR, LRESULT* pResult)
 	*pResult = 0;
 }
 
+// ---- Appointment status (Booked / Completed / Cancelled) ----
+void CAppointmentDlg::SetStatus(int id, const char* status)
+{
+	DBConnection db;
+	if (!db.Open()) { AfxMessageBox(L"Unable to connect to the database.", MB_ICONERROR); return; }
+
+	std::string sql = std::string("UPDATE Appointment SET Status='") + status
+		+ "' WHERE AppointmentID=" + std::to_string(id);
+
+	if (!db.Execute(sql))
+		AfxMessageBox(L"Failed to change the status.", MB_ICONERROR);
+
+	LoadAppointments();
+}
+
+// Right-click a row to change its status
+void CAppointmentDlg::OnNMRClickListAppts(NMHDR* pNMHDR, LRESULT* pResult)
+{
+	LPNMITEMACTIVATE p = reinterpret_cast<LPNMITEMACTIVATE>(pNMHDR);
+	*pResult = 0;
+	if (p->iItem < 0) return;
+
+	m_list.SetItemState(p->iItem, LVIS_SELECTED | LVIS_FOCUSED, LVIS_SELECTED | LVIS_FOCUSED);
+	int id = _ttoi(m_list.GetItemText(p->iItem, 0));
+	m_selectedId = id;
+
+	CPoint pt = p->ptAction;
+	m_list.ClientToScreen(&pt);
+
+	CMenu menu;
+	menu.CreatePopupMenu();
+	menu.AppendMenu(MF_STRING, 1, L"Mark as Booked");
+	menu.AppendMenu(MF_STRING, 2, L"Mark as Completed");
+	menu.AppendMenu(MF_STRING, 3, L"Mark as Cancelled");
+
+	int cmd = menu.TrackPopupMenu(TPM_RETURNCMD | TPM_RIGHTBUTTON, pt.x, pt.y, this);
+	if (cmd == 1) SetStatus(id, "Booked");
+	else if (cmd == 2) SetStatus(id, "Completed");
+	else if (cmd == 3) SetStatus(id, "Cancelled");
+}
+
+// Colour each row by its status
+void CAppointmentDlg::OnNMCustomdrawListAppts(NMHDR* pNMHDR, LRESULT* pResult)
+{
+	LPNMLVCUSTOMDRAW c = reinterpret_cast<LPNMLVCUSTOMDRAW>(pNMHDR);
+	*pResult = CDRF_DODEFAULT;
+
+	if (c->nmcd.dwDrawStage == CDDS_PREPAINT)
+	{
+		*pResult = CDRF_NOTIFYITEMDRAW;
+	}
+	else if (c->nmcd.dwDrawStage == CDDS_ITEMPREPAINT)
+	{
+		CString st = m_list.GetItemText((int)c->nmcd.dwItemSpec, 6);
+		if (st == L"Completed") c->clrText = RGB(46, 125, 50);
+		else if (st == L"Cancelled") c->clrText = RGB(178, 34, 34);
+		else c->clrText = RGB(90, 65, 45);
+	}
+}
+
 HBRUSH CAppointmentDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
 {
 	if (nCtlColor == CTLCOLOR_EDIT)
@@ -377,4 +450,16 @@ BOOL CAppointmentDlg::OnEraseBkgnd(CDC* pDC)
 	Theme::DrawFormPanel(this, *pDC);
 
 	return TRUE;
+}
+void CAppointmentDlg::OnBnClickedCancel()
+{
+	// TODO: Add your control notification handler code here
+	CDialogEx::OnCancel();
+}
+
+void CAppointmentDlg::OnLvnItemchangedListAppts(NMHDR* pNMHDR, LRESULT* pResult)
+{
+	LPNMLISTVIEW pNMLV = reinterpret_cast<LPNMLISTVIEW>(pNMHDR);
+	// TODO: Add your control notification handler code here
+	*pResult = 0;
 }
